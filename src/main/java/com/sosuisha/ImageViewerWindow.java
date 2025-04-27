@@ -1,12 +1,13 @@
 package com.sosuisha;
 
+import com.sosuisha.jfxbuilder.SceneBuilder;
+import com.sosuisha.jfxbuilder.ImageViewBuilder;
+import com.sosuisha.jfxbuilder.BorderPaneBuilder;
+
 import java.io.File;
 
-import javafx.scene.Scene;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -16,68 +17,68 @@ public class ImageViewerWindow {
     private double yOffset = 0;
 
     public ImageViewerWindow(File file) {
-        // 新しいウィンドウを作成して画像を表示
-        Stage stage = new Stage(StageStyle.UNDECORATED); // ウィンドウ枠をなくす
-        BorderPane root = new BorderPane();
+        var image = new Image(file.toURI().toString());
 
-        // 背景を黒に設定
-        root.setStyle("-fx-background-color: black;");
+        var imageView = ImageViewBuilder.create(image)
+                .image(image)
+                .preserveRatio(true)
+                .smooth(true)
+                .build();
 
-        Image image = new Image(file.toURI().toString());
-        ImageView imageView = new ImageView(image);
-        imageView.setPreserveRatio(true);
-        imageView.setSmooth(true);
-
-        root.setCenter(imageView);
-
-        // 画像の幅と高さを取得
-        double imageWidth = image.getWidth();
-        double imageHeight = image.getHeight();
+        var stage = new Stage(StageStyle.UNDECORATED); // ウィンドウ枠をなくす
+        var root = BorderPaneBuilder.create()
+                .style("-fx-background-color: black")
+                .center(imageView)
+                .onScroll(event -> {
+                    // マウスホイールでウィンドウを拡大・縮小
+                    double delta = event.getDeltaY(); // マウスホイールの回転量
+                    double scaleFactor = (delta > 0) ? 1.05 : 0.95; // 拡大または縮小
+                    stage.setWidth(stage.getWidth() * scaleFactor);
+                    stage.setHeight(stage.getHeight() * scaleFactor);
+                })
+                .onMousePressed(event -> {
+                    // マウスドラッグでウィンドウを移動                    
+                    xOffset = event.getSceneX();
+                    yOffset = event.getSceneY();
+                })
+                .onMouseDragged(event -> {
+                    stage.setX(event.getScreenX() - xOffset);
+                    stage.setY(event.getScreenY() - yOffset);
+                })
+                .build();
 
         // 長辺を最大800に制限し、アスペクト比を維持してサイズを計算
+        double imageWidth = image.getWidth();
+        double imageHeight = image.getHeight();
         double maxDimension = 800;
         double scale = Math.min(maxDimension / imageWidth, maxDimension / imageHeight);
         double windowWidth = imageWidth * scale;
         double windowHeight = imageHeight * scale;
 
-        Scene scene = new Scene(root, windowWidth, windowHeight);
+        var scene = SceneBuilder.create()
+                .root(root)
+                .width(windowWidth)
+                .height(windowHeight)
+                .apply(myScene -> {
+                    // ウィンドウサイズ変更時にImageViewをリサイズ
+                    myScene.widthProperty().addListener((obs, oldVal, newVal) -> {
 
-        // ウィンドウサイズ変更時にImageViewをリサイズ
-        scene.widthProperty().addListener((obs, oldVal, newVal) -> {
-            imageView.setFitWidth(newVal.doubleValue());
-        });
-        scene.heightProperty().addListener((obs, oldVal, newVal) -> {
-            imageView.setFitHeight(newVal.doubleValue());
-        });
-
-        // マウスホイールでウィンドウを拡大・縮小
-        root.setOnScroll(event -> {
-            double delta = event.getDeltaY(); // マウスホイールの回転量
-            double scaleFactor = (delta > 0) ? 1.05 : 0.95; // 拡大または縮小
-            stage.setWidth(stage.getWidth() * scaleFactor);
-            stage.setHeight(stage.getHeight() * scaleFactor);
-        });
-
-        // Escキーでウィンドウを閉じる
-        scene.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ESCAPE) {
-                stage.close();
-            }
-        });
-
-        // マウスドラッグでウィンドウを移動
-        root.setOnMousePressed(event -> {
-            xOffset = event.getSceneX();
-            yOffset = event.getSceneY();
-        });
-
-        root.setOnMouseDragged(event -> {
-            stage.setX(event.getScreenX() - xOffset);
-            stage.setY(event.getScreenY() - yOffset);
-        });
+                        imageView.setFitWidth(newVal.doubleValue());
+                    });
+                    myScene.heightProperty().addListener((obs, oldVal, newVal) -> {
+                        imageView.setFitHeight(newVal.doubleValue());
+                    });
+                })
+                .onKeyPressed(event -> {
+                    // Escキーでウィンドウを閉じる
+                    if (event.getCode() == KeyCode.ESCAPE) {
+                        stage.close();
+                    }
+                })
+                .build();
 
         stage.setScene(scene);
-        stage.setTitle("画像: " + file.getName());
+        stage.setTitle("Image: " + file.getName());
         stage.show();
     }
 }

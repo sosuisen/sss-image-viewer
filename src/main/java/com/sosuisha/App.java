@@ -12,7 +12,6 @@ public class App extends Application {
         // コマンドライン引数を取得
         Parameters params = getParameters();
         String filePath = params.getUnnamed().isEmpty() ? null : params.getUnnamed().get(0);
-
         if (filePath != null) {
             File file = new File(filePath);
             if (file.exists() && file.isFile()) {
