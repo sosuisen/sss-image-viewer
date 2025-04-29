@@ -7,6 +7,7 @@ public class ImageUtil {
     public static String[] availableImageFormats = {
         "gif",
         "bmp",
+        "png",
         "jpeg", "jpg", "jpeg", "jfif",
         "psd", "psb",
         "tiff", "tif",

@@ -15,6 +15,7 @@ import javax.imageio.ImageIO;
 
 import javafx.application.Platform;
 import javafx.geometry.Dimension2D;
+import javafx.geometry.Point2D;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -40,7 +41,7 @@ public class ImageViewerWindow {
         this(file, withFrame, null, null);
     }
 
-    public ImageViewerWindow(File file, boolean withFrame, Dimension2D position, Dimension2D imageAreaSize) {
+    public ImageViewerWindow(File file, boolean withFrame, Point2D position, Dimension2D imageAreaSize) {
         currentFile = file;
 
         stage = new Stage(withFrame ? StageStyle.DECORATED : StageStyle.UNDECORATED);
@@ -100,7 +101,7 @@ public class ImageViewerWindow {
                         }
                         case ENTER -> {
                             new ImageViewerWindow(currentFile, !withFrame,
-                                    new Dimension2D(stage.getX(), stage.getY()),
+                                    new Point2D(stage.getX(), stage.getY()),                                   
                                     new Dimension2D(imageView.getImage().getWidth(), imageView.getImage().getHeight()));
                             stage.close();
                         }
@@ -117,8 +118,8 @@ public class ImageViewerWindow {
         Platform.runLater(() -> {
             if (imageAreaSize != null) {
                 resizeWindow(getWindowSizeFromImageSize(imageAreaSize));
-                stage.setX(position.getWidth());
-                stage.setY(position.getHeight());
+                stage.setX(position.getX());
+                stage.setY(position.getY());
             } else {
                 resizeWindow(getWindowSizeFromImageSize(
                     new Dimension2D(imageView.getImage().getWidth(), imageView.getImage().getHeight())));
