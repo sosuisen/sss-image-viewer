@@ -24,8 +24,8 @@ public class DragAndDropWindow {
                     Dragboard dragboard = event.getDragboard();
                     if (dragboard.hasFiles()) {
                         File file = dragboard.getFiles().get(0);
-                        if (isImageFile(file)) {
-                            new ImageViewerWindow(file); // ドロップされた画像を新しいウィンドウで開く
+                        if (ImageUtil.isImageFile(file)) {
+                            new ImageViewerWindow(file);
                         }
                     }
                     event.setDropCompleted(true);
@@ -35,14 +35,9 @@ public class DragAndDropWindow {
 
         var scene = new Scene(root, 600, 400);
         stage.setScene(scene);
-        stage.setTitle("ドラッグ＆ドロップで画像を開く");
+        stage.setTitle("Drag & drop an image file here.");
         stage.show();
     }
 
-    private boolean isImageFile(File file) {
-        String lowerCaseName = file.getName().toLowerCase();
-        return lowerCaseName.endsWith(".png") || lowerCaseName.endsWith(".jpg") ||
-                lowerCaseName.endsWith(".jpeg") || lowerCaseName.endsWith(".gif") ||
-                lowerCaseName.endsWith(".bmp");
-    }
+
 }
