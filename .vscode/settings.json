@@ -2,4 +2,10 @@
     // for JavaFX CSS Support
     "css.lint.vendorPrefix": "ignore",
     "java.configuration.updateBuildConfiguration": "automatic",
+    "maven.terminal.customEnv": [
+        {
+            "environmentVariable": "JAVA_HOME",
+            "value": "C:\\Users\\hidek\\scoop\\apps\\openjdk24\\current"
+        }
+    ]
 }

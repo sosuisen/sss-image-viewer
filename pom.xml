@@ -11,8 +11,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javafx.plugin.version>0.0.8</javafx.plugin.version>
     <!-- Note: JavaFX 23 requires JDK 21 or Later -->
-    <javafx.version>23.0.2</javafx.version>
-    <maven.compiler.release>21</maven.compiler.release>
+    <javafx.version>24.0.1</javafx.version>
+    <maven.compiler.release>24</maven.compiler.release>
     <main.class>com.sosuisha.Launcher</main.class>
   </properties>
 
@@ -29,7 +29,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
+        <version>3.14.0</version>
         <configuration>
           <release>${maven.compiler.release}</release>
         </configuration>
@@ -89,7 +89,7 @@
         </executions>
         <configuration>
           <name>${project.artifactId}</name>
-          <appVersion>1.0.1</appVersion>
+          <appVersion>1.0.2</appVersion>
           <vendor>${project.groupId}</vendor>
           <input>${project.build.directory}/app/</input>
           <mainJar>${project.artifactId}-${project.version}.jar</mainJar>
