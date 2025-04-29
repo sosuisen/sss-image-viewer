@@ -63,6 +63,11 @@ public class ImageViewerWindow {
                         imageView.setFitHeight(newVal.doubleValue());
                     });
                 })
+                .onMouseClicked(event -> {
+                    if (event.getClickCount() == 2) {
+                        stage.setFullScreen(!stage.isFullScreen());
+                    }
+                })
                 .onKeyPressed(event -> {
                     var keyCode = event.getCode();
                     switch (keyCode) {
