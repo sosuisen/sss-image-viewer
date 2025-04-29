@@ -5,8 +5,6 @@
   <artifactId>sss-image-viewer</artifactId>
   <version>1.0-SNAPSHOT</version>
   <description>Generated from jfx-sss-fxml archetype</description>
-
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javafx.plugin.version>0.0.8</javafx.plugin.version>
@@ -110,7 +108,7 @@
         </executions>
         <configuration>
           <name>${project.artifactId}</name>
-          <appVersion>1.0.2</appVersion>
+          <appVersion>1.0.3</appVersion>
           <vendor>${project.groupId}</vendor>
           <input>${project.build.directory}/app/</input>
           <mainJar>${project.artifactId}-${project.version}.jar</mainJar>
@@ -122,6 +120,7 @@
           <!-- for debug -->
           <!-- <winConsole>true</winConsole> -->
           <!-- Options for MSI -->
+          <icon>sss-image-viewer.ico</icon>
           <winDirChooser>true</winDirChooser>
           <winMenu>true</winMenu>
           <winShortcut>true</winShortcut>

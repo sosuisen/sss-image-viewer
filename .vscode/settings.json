@@ -7,5 +7,11 @@
             "environmentVariable": "JAVA_HOME",
             "value": "C:\\Users\\hidek\\scoop\\apps\\openjdk24\\current"
         }
+    ],
+    "maven.terminal.favorites": [
+        {
+            "command": "clean package",
+            "debug": false
+        }
     ]
 }
