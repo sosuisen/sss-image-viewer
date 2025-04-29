@@ -6,8 +6,12 @@ import com.sosuisha.jfxbuilder.SceneBuilder;
 import com.sosuisha.jfxbuilder.ImageViewBuilder;
 import com.sosuisha.jfxbuilder.BorderPaneBuilder;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
+
+import javax.imageio.ImageIO;
 
 import javafx.application.Platform;
 import javafx.geometry.Dimension2D;
@@ -18,6 +22,7 @@ import javafx.scene.image.ImageView;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.embed.swing.SwingFXUtils;
 
 public class ImageViewerWindow {
     private static int STATUS_HEIGHT = 20;
@@ -129,7 +134,16 @@ public class ImageViewerWindow {
     }
 
     private Image getImageFromFile(File file) {
-        return new Image(file.toURI().toString());
+        try {
+            BufferedImage bufferedImage = ImageIO.read(file);
+            if (bufferedImage == null) {
+                throw new IllegalArgumentException("Unsupported image format: " + file.getName());
+            }
+            return SwingFXUtils.toFXImage(bufferedImage, null);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to load image: " + file.getName(), e);
+        }
     }
 
     private Dimension2D getWindowSizeFromImageSize(Dimension2D imageSize) {

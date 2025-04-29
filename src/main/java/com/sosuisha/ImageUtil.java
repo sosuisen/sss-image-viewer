@@ -5,7 +5,12 @@ import java.util.Arrays;
 
 public class ImageUtil {
     public static String[] availableImageFormats = {
-        "png", "jpg", "jpeg", "jfif", "gif", "bmp"
+        "gif",
+        "bmp",
+        "jpeg", "jpg", "jpeg", "jfif",
+        "psd", "psb",
+        "tiff", "tif",
+        "webp"
     };
     
     public static boolean isImageFile(File file) {
