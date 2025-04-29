@@ -15,7 +15,7 @@ public class App extends Application {
         if (filePath != null) {
             File file = new File(filePath);
             if (file.exists() && file.isFile()) {
-                new ImageViewerWindow(file); // 指定された画像ファイルを開く
+                new ImageViewerWindow(file, true); // 指定された画像ファイルを開く
             } else {
                 System.err.println("指定されたファイルが存在しないか、無効です: " + filePath);
             }

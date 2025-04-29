@@ -25,7 +25,7 @@ public class DragAndDropWindow {
                     if (dragboard.hasFiles()) {
                         File file = dragboard.getFiles().get(0);
                         if (ImageUtil.isImageFile(file)) {
-                            new ImageViewerWindow(file);
+                            new ImageViewerWindow(file, true);
                         }
                     }
                     event.setDropCompleted(true);

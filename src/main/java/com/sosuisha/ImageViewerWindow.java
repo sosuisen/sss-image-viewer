@@ -8,6 +8,7 @@ import java.io.File;
 import java.util.List;
 
 import javafx.geometry.Dimension2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
@@ -23,10 +24,14 @@ public class ImageViewerWindow {
     private Stage stage = null;
     private File currentFile = null;
 
-    public ImageViewerWindow(File file) {
-        currentFile = file;
+    public ImageViewerWindow(File file, boolean withFrame) {
+        this(file, withFrame, null);
+    }
 
-        stage = new Stage(StageStyle.UNDECORATED);
+    public ImageViewerWindow(File file, boolean withFrame, Rectangle2D rect) {
+        currentFile = file;
+       
+        stage = new Stage(withFrame ? StageStyle.DECORATED : StageStyle.UNDECORATED);
 
         imageView = ImageViewBuilder.create()
                 .preserveRatio(true)
@@ -68,6 +73,10 @@ public class ImageViewerWindow {
                         case RIGHT -> {
                             getNextImage(currentFile);
                         }
+                        case ENTER -> {
+                            new ImageViewerWindow(currentFile, !withFrame, new Rectangle2D(stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight()));
+                            stage.close();
+                        }
                         default -> {
                         }
                     }
@@ -78,7 +87,14 @@ public class ImageViewerWindow {
         imageView.fitHeightProperty().bind(scene.heightProperty());
 
         setImage(currentFile);
-
+        if (rect != null) {
+            resizeWindow(new Dimension2D(rect.getWidth(), rect.getHeight()));
+            stage.setX(rect.getMinX());
+            stage.setY(rect.getMinY());
+        } else {
+            resizeWindow(getWindowSizeFromImageSize());
+        }
+        
         stage.setScene(scene);
         stage.setTitle("Image: " + currentFile.getName());
         stage.show();
@@ -106,8 +122,7 @@ public class ImageViewerWindow {
 
     private void setImage(File file) {
         currentFile = file;
-        imageView.setImage(getImageFromFile(file));
-        resizeWindow(getWindowSizeFromImageSize());
+        imageView.setImage(getImageFromFile(file));        
         stage.setTitle("Image: " + currentFile.getName());
     }
 
@@ -128,6 +143,7 @@ public class ImageViewerWindow {
         var index = files.indexOf(file);
         var nextIndex = index > 0 ? index - 1 : files.size() - 1;
         setImage(files.get(nextIndex));
+        resizeWindow(getWindowSizeFromImageSize());
     }
 
     private void getNextImage(File file) {
@@ -135,5 +151,6 @@ public class ImageViewerWindow {
         var index = files.indexOf(file);
         var nextIndex = index < files.size() - 1 ? index + 1 : 0;
         setImage(files.get(nextIndex));
+        resizeWindow(getWindowSizeFromImageSize());        
     }
 }
