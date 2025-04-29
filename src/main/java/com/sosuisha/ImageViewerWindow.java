@@ -12,7 +12,6 @@ import java.util.List;
 import javafx.application.Platform;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Insets;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -32,15 +31,12 @@ public class ImageViewerWindow {
     private Scene scene = null;
     private File currentFile = null;
 
-    private boolean withFrame = true;
-
     public ImageViewerWindow(File file, boolean withFrame) {
         this(file, withFrame, null, null);
     }
 
     public ImageViewerWindow(File file, boolean withFrame, Dimension2D position, Dimension2D imageAreaSize) {
         currentFile = file;
-        this.withFrame = withFrame;
 
         stage = new Stage(withFrame ? StageStyle.DECORATED : StageStyle.UNDECORATED);
 
