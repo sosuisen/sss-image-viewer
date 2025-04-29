@@ -137,16 +137,7 @@ public class ImageViewerWindow {
     }
 
     private Image getImageFromFile(File file) {
-        try {
-            BufferedImage bufferedImage = ImageIO.read(file);
-            if (bufferedImage == null) {
-                throw new IllegalArgumentException("Unsupported image format: " + file.getName());
-            }
-            return SwingFXUtils.toFXImage(bufferedImage, null);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to load image: " + file.getName(), e);
-        }
+        return new Image(file.toURI().toString());
     }
 
     private Dimension2D getWindowSizeFromImageSize(Dimension2D imageSize) {
