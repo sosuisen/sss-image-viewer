@@ -8,7 +8,6 @@ import java.io.File;
 import java.util.List;
 
 import javafx.geometry.Dimension2D;
-import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
@@ -22,7 +21,6 @@ public class ImageViewerWindow {
     private List<File> files = null;
     private ImageView imageView = null;
     private Stage stage = null;
-    private Scene scene = null;
     private File currentFile = null;
 
     public ImageViewerWindow(File file) {
@@ -35,7 +33,7 @@ public class ImageViewerWindow {
                 .smooth(true)
                 .build();
 
-        scene = SceneBuilder.create()
+        var scene = SceneBuilder.create()
                 .root(BorderPaneBuilder.create()
                         .style("-fx-background-color: black")
                         .center(imageView)
@@ -54,15 +52,6 @@ public class ImageViewerWindow {
                             stage.setY(event.getScreenY() - yOffset);
                         })
                         .build())
-                .apply(myScene -> {
-                    myScene.widthProperty().addListener((obs, oldVal, newVal) -> {
-
-                        imageView.setFitWidth(newVal.doubleValue());
-                    });
-                    myScene.heightProperty().addListener((obs, oldVal, newVal) -> {
-                        imageView.setFitHeight(newVal.doubleValue());
-                    });
-                })
                 .onMouseClicked(event -> {
                     if (event.getClickCount() == 2) {
                         stage.setFullScreen(!stage.isFullScreen());
@@ -84,6 +73,9 @@ public class ImageViewerWindow {
                     }
                 })
                 .build();
+
+        imageView.fitWidthProperty().bind(scene.widthProperty());
+        imageView.fitHeightProperty().bind(scene.heightProperty());
 
         setImage(currentFile);
 
@@ -123,11 +115,10 @@ public class ImageViewerWindow {
         if (files != null) {
             return;
         }
-        File folder = file.getParentFile();
+        var folder = file.getParentFile();
         if (folder != null && folder.isDirectory()) {
             files = List.of(folder.listFiles((dir, name) -> ImageUtil.isImageFile(name)));
-        }
-        else {
+        } else {
             files = List.of(file);
         }
     }
