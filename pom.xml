@@ -89,7 +89,7 @@
         </executions>
         <configuration>
           <name>${project.artifactId}</name>
-          <appVersion>1.0.0</appVersion>
+          <appVersion>1.0.1</appVersion>
           <vendor>${project.groupId}</vendor>
           <input>${project.build.directory}/app/</input>
           <mainJar>${project.artifactId}-${project.version}.jar</mainJar>
@@ -105,6 +105,7 @@
           <winMenu>true</winMenu>
           <winShortcut>true</winShortcut>
           <winShortcutPrompt>true</winShortcutPrompt>
+          <winUpgradeUuid>885ccaf7-dad3-405a-a666-1cfd6f22725b</winUpgradeUuid>
         </configuration>
       </plugin>
     </plugins>
