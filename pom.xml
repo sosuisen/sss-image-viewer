@@ -3,16 +3,17 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.sosuisha</groupId>
   <artifactId>sss-image-viewer</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>${appversion}</version>
   <description>Generated from jfx-sss-fxml archetype</description>
   <properties>
+    <appversion>1.0.4</appversion>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javafx.plugin.version>0.0.8</javafx.plugin.version>
     <!-- Note: JavaFX 23 requires JDK 21 or Later -->
     <javafx.version>24.0.1</javafx.version>
     <maven.compiler.release>24</maven.compiler.release>
     <twelvemonkeys.version>3.12.0</twelvemonkeys.version>
-    <main.class>com.sosuisha.Launcher</main.class>
+    <main.class>com.sosuisha.imageviewer.Launcher</main.class>
   </properties>
 
   <dependencies>
@@ -54,29 +55,24 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>3.8.1</version>
-        <executions>
-          <execution>
-            <id>copy-dependencies</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/app/lib</outputDirectory>
-              <includeScope>runtime</includeScope>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-maven-plugin</artifactId>
         <version>${javafx.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>jlink</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jlink</goal>
+            </goals>
+          </execution>
+        </executions>
         <configuration>
+          <stripDebug>true</stripDebug>
+          <noHeaderFiles>true</noHeaderFiles>
+          <noManPages>true</noManPages>
           <mainClass>${main.class}</mainClass>
+          <jlinkImageName>image</jlinkImageName>
         </configuration>
       </plugin>
       <plugin>
@@ -87,8 +83,6 @@
           <outputDirectory>${project.build.directory}/app</outputDirectory>
           <archive>
             <manifest>
-              <addClasspath>true</addClasspath>
-              <classpathPrefix>lib/</classpathPrefix>
               <mainClass>${main.class}</mainClass>
             </manifest>
           </archive>
@@ -108,8 +102,9 @@
         </executions>
         <configuration>
           <name>${project.artifactId}</name>
-          <appVersion>1.0.3</appVersion>
+          <appVersion>${appversion}</appVersion>
           <vendor>${project.groupId}</vendor>
+          <runtimeImage>${project.build.directory}/image</runtimeImage>
           <input>${project.build.directory}/app/</input>
           <mainJar>${project.artifactId}-${project.version}.jar</mainJar>
           <destination>${project.build.directory}/jpackage</destination>
@@ -121,11 +116,13 @@
           <!-- <winConsole>true</winConsole> -->
           <!-- Options for MSI -->
           <icon>sss-image-viewer.ico</icon>
+
           <winDirChooser>true</winDirChooser>
           <winMenu>true</winMenu>
           <winShortcut>true</winShortcut>
           <winShortcutPrompt>true</winShortcutPrompt>
           <winUpgradeUuid>885ccaf7-dad3-405a-a666-1cfd6f22725b</winUpgradeUuid>
+
         </configuration>
       </plugin>
     </plugins>

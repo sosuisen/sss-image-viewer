@@ -1,4 +1,4 @@
-package com.sosuisha;
+package com.sosuisha.imageviewer;
 
 import javafx.application.Application;
 

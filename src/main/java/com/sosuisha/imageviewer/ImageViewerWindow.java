@@ -1,10 +1,4 @@
-package com.sosuisha;
-
-import com.sosuisha.jfxbuilder.LabelBuilder;
-
-import com.sosuisha.jfxbuilder.SceneBuilder;
-import com.sosuisha.jfxbuilder.ImageViewBuilder;
-import com.sosuisha.jfxbuilder.BorderPaneBuilder;
+package com.sosuisha.imageviewer;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -12,6 +6,11 @@ import java.io.IOException;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+
+import com.sosuisha.imageviewer.jfxbuilder.BorderPaneBuilder;
+import com.sosuisha.imageviewer.jfxbuilder.ImageViewBuilder;
+import com.sosuisha.imageviewer.jfxbuilder.LabelBuilder;
+import com.sosuisha.imageviewer.jfxbuilder.SceneBuilder;
 
 import javafx.application.Platform;
 import javafx.geometry.Dimension2D;
@@ -182,7 +181,7 @@ public class ImageViewerWindow {
         }
         var folder = file.getParentFile();
         if (folder != null && folder.isDirectory()) {
-            files = List.of(folder.listFiles((dir, name) -> ImageUtil.isImageFile(name)));
+            files = List.of(folder.listFiles((_, name) -> ImageUtil.isImageFile(name)));
         } else {
             files = List.of(file);
         }

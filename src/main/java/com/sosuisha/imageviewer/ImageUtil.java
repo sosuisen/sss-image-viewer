@@ -1,4 +1,4 @@
-package com.sosuisha;
+package com.sosuisha.imageviewer;
 
 import java.io.File;
 import java.util.Arrays;

@@ -1,4 +1,4 @@
-package com.sosuisha.jfxbuilder;
+package com.sosuisha.imageviewer.jfxbuilder;
 import javafx.scene.*;
 import javafx.scene.effect.*;
 import javafx.scene.image.*;

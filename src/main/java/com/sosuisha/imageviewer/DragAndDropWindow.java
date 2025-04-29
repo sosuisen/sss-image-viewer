@@ -1,4 +1,4 @@
-package com.sosuisha;
+package com.sosuisha.imageviewer;
 
 import javafx.scene.Scene;
 import javafx.scene.input.Dragboard;
@@ -7,7 +7,7 @@ import javafx.stage.Stage;
 
 import java.io.File;
 
-import com.sosuisha.jfxbuilder.BorderPaneBuilder;
+import com.sosuisha.imageviewer.jfxbuilder.BorderPaneBuilder;
 
 public class DragAndDropWindow {
 
