@@ -27,6 +27,7 @@ import javafx.embed.swing.SwingFXUtils;
 
 public class ImageViewerWindow {
     private static int STATUS_HEIGHT = 20;
+    private static final double MAX_DIMENSION = 800.0; // デフォルトの最大サイズ
 
     private double xOffset = 0;
     private double yOffset = 0;
@@ -101,8 +102,9 @@ public class ImageViewerWindow {
                         }
                         case ENTER -> {
                             new ImageViewerWindow(currentFile, !withFrame,
-                                    new Point2D(stage.getX(), stage.getY()),                                   
-                                    new Dimension2D(imageView.getImage().getWidth(), imageView.getImage().getHeight()));
+                                    new Point2D(stage.getX(), stage.getY()),
+                                    new Dimension2D(imageView.fitWidthProperty().doubleValue(),
+                                            imageView.fitHeightProperty().doubleValue()));
                             stage.close();
                         }
                         default -> {
@@ -122,7 +124,8 @@ public class ImageViewerWindow {
                 stage.setY(position.getY());
             } else {
                 resizeWindow(getWindowSizeFromImageSize(
-                    new Dimension2D(imageView.getImage().getWidth(), imageView.getImage().getHeight())));
+                        new Dimension2D(imageView.getImage().getWidth(), imageView.getImage().getHeight()),
+                        MAX_DIMENSION));
                 var bounds = Screen.getPrimary().getVisualBounds(); // exclude taskbar
                 stage.setX(bounds.getWidth() / 2 - stage.getWidth() / 2);
                 stage.setY(bounds.getHeight() / 2 - stage.getHeight() / 2);
@@ -148,14 +151,17 @@ public class ImageViewerWindow {
     }
 
     private Dimension2D getWindowSizeFromImageSize(Dimension2D imageSize) {
+        return getWindowSizeFromImageSize(imageSize, -1);
+    }
+
+    private Dimension2D getWindowSizeFromImageSize(Dimension2D imageSize, double maxDimension) {
         var titleBarHeight = stage.getHeight() - scene.getHeight();
 
-        double maxDimension = 800;
         double imageWidth = imageSize.getWidth();
         double imageHeight = imageSize.getHeight();
-        double scale = Math.min(maxDimension / imageWidth, maxDimension / imageHeight);
+        double scale = maxDimension > 0 ? Math.min(maxDimension / imageWidth, maxDimension / imageHeight) : 1;
         double windowWidth = imageWidth * scale;
-        double windowHeight = imageHeight * scale +  titleBarHeight;
+        double windowHeight = imageHeight * scale + titleBarHeight;
         return new Dimension2D(windowWidth, windowHeight);
     }
 
@@ -187,7 +193,10 @@ public class ImageViewerWindow {
         var index = files.indexOf(file);
         var nextIndex = index > 0 ? index - 1 : files.size() - 1;
         setImage(files.get(nextIndex));
-        resizeWindow(getWindowSizeFromImageSize(new Dimension2D(imageView.getImage().getWidth(), imageView.getImage().getHeight())));
+        resizeWindow(
+                getWindowSizeFromImageSize(
+                        new Dimension2D(imageView.getImage().getWidth(), imageView.getImage().getHeight()),
+                        MAX_DIMENSION));
     }
 
     private void getNextImage(File file) {
@@ -195,6 +204,9 @@ public class ImageViewerWindow {
         var index = files.indexOf(file);
         var nextIndex = index < files.size() - 1 ? index + 1 : 0;
         setImage(files.get(nextIndex));
-        resizeWindow(getWindowSizeFromImageSize(new Dimension2D(imageView.getImage().getWidth(), imageView.getImage().getHeight())));
+        resizeWindow(
+                getWindowSizeFromImageSize(
+                        new Dimension2D(imageView.getImage().getWidth(), imageView.getImage().getHeight()),
+                        MAX_DIMENSION));
     }
 }
