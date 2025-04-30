@@ -3,15 +3,15 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.sosuisha</groupId>
   <artifactId>sss-image-viewer</artifactId>
-  <version>${appversion}</version>
+  <version>1.0.4</version>
   <description>Generated from jfx-sss-fxml archetype</description>
   <properties>
     <appversion>1.0.4</appversion>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javafx.plugin.version>0.0.8</javafx.plugin.version>
     <!-- Note: JavaFX 23 requires JDK 21 or Later -->
-    <javafx.version>24.0.1</javafx.version>
-    <maven.compiler.release>24</maven.compiler.release>
+    <javafx.version>23.0.2</javafx.version>
+    <maven.compiler.release>23</maven.compiler.release>
     <twelvemonkeys.version>3.12.0</twelvemonkeys.version>
     <main.class>com.sosuisha.imageviewer.App</main.class>
   </properties>
@@ -27,25 +27,38 @@
       <artifactId>javafx-swing</artifactId>
       <version>${javafx.version}</version>
     </dependency>
-    <dependency>
-      <groupId>com.twelvemonkeys.imageio</groupId>
-      <artifactId>imageio-psd</artifactId>
-      <version>${twelvemonkeys.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.twelvemonkeys.imageio</groupId>
-      <artifactId>imageio-tiff</artifactId>
-      <version>${twelvemonkeys.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.twelvemonkeys.imageio</groupId>
-      <artifactId>imageio-webp</artifactId>
-      <version>${twelvemonkeys.version}</version>
-    </dependency>
   </dependencies>
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>com.gluonhq</groupId>
+        <artifactId>gluonfx-maven-plugin</artifactId>
+        <version>1.0.26</version>
+        <configuration>
+          <mainClass>${main.class}</mainClass>
+        </configuration>
+      </plugin>
+      <!--
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.8.1</version>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/app/lib</outputDirectory>
+              <includeScope>runtime</includeScope>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -54,6 +67,7 @@
           <release>${maven.compiler.release}</release>
         </configuration>
       </plugin>
+      
       <plugin>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-maven-plugin</artifactId>
@@ -75,6 +89,7 @@
           <jlinkImageName>image</jlinkImageName>
         </configuration>
       </plugin>
+      <!--
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
@@ -83,11 +98,15 @@
           <outputDirectory>${project.build.directory}/app</outputDirectory>
           <archive>
             <manifest>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
               <mainClass>${main.class}</mainClass>
             </manifest>
           </archive>
         </configuration>
       </plugin>
+      -->
+      <!--
       <plugin>
         <groupId>org.panteleyev</groupId>
         <artifactId>jpackage-maven-plugin</artifactId>
@@ -112,11 +131,8 @@
             <option>-Dfile.encoding=UTF-8</option>
           </javaOptions>
           <type>${jpackage.type}</type>
-          <!-- for debug -->
-          <!-- <winConsole>true</winConsole> -->
-          <!-- Options for MSI -->
-          <icon>sss-image-viewer.ico</icon>
 
+          <icon>sss-image-viewer.ico</icon>
           <winDirChooser>true</winDirChooser>
           <winMenu>true</winMenu>
           <winShortcut>true</winShortcut>
@@ -125,6 +141,7 @@
 
         </configuration>
       </plugin>
+          -->
     </plugins>
   </build>
 
@@ -139,7 +156,7 @@
       <properties>
         <!-- APP_IMAGE or MSI-->
         <!-- If you choose MSI, install WiX ver3 and set the path -->
-        <jpackage.type>MSI</jpackage.type>
+        <jpackage.type>APP_IMAGE</jpackage.type>
       </properties>
     </profile>
     <profile>
