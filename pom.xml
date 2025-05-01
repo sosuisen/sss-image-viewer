@@ -27,6 +27,7 @@
       <artifactId>javafx-swing</artifactId>
       <version>${javafx.version}</version>
     </dependency>
+    <!--
     <dependency>
       <groupId>com.twelvemonkeys.imageio</groupId>
       <artifactId>imageio-psd</artifactId>
@@ -42,6 +43,7 @@
       <artifactId>imageio-webp</artifactId>
       <version>${twelvemonkeys.version}</version>
     </dependency>    
+    -->
   </dependencies>
 
   <build>
