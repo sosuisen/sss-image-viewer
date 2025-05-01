@@ -10,7 +10,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javafx.plugin.version>0.0.8</javafx.plugin.version>
     <!-- Note: JavaFX 23 requires JDK 21 or Later -->
-    <javafx.version>23.0.2</javafx.version>
+    <javafx.version>24.0.1</javafx.version>
     <maven.compiler.release>23</maven.compiler.release>
     <twelvemonkeys.version>3.12.0</twelvemonkeys.version>
     <main.class>com.sosuisha.imageviewer.App</main.class>
@@ -27,6 +27,21 @@
       <artifactId>javafx-swing</artifactId>
       <version>${javafx.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.twelvemonkeys.imageio</groupId>
+      <artifactId>imageio-psd</artifactId>
+      <version>${twelvemonkeys.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.twelvemonkeys.imageio</groupId>
+      <artifactId>imageio-tiff</artifactId>
+      <version>${twelvemonkeys.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.twelvemonkeys.imageio</groupId>
+      <artifactId>imageio-webp</artifactId>
+      <version>${twelvemonkeys.version}</version>
+    </dependency>    
   </dependencies>
 
   <build>
