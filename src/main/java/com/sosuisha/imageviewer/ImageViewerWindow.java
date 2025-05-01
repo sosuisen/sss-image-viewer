@@ -1,11 +1,7 @@
 package com.sosuisha.imageviewer;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
-
-import javax.imageio.ImageIO;
 
 import com.sosuisha.imageviewer.jfxbuilder.BorderPaneBuilder;
 import com.sosuisha.imageviewer.jfxbuilder.ImageViewBuilder;
@@ -22,7 +18,6 @@ import javafx.scene.image.ImageView;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.embed.swing.SwingFXUtils;
 
 public class ImageViewerWindow {
     private static int STATUS_HEIGHT = 20;
