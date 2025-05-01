@@ -41,6 +41,16 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
+  "type":"com.sun.javafx.font.directwrite.D2D1_COLOR_F",
+  "fields":[{"name":"a"},{"name":"b"},{"name":"g"},{"name":"r"}],
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "type":"com.sun.javafx.font.directwrite.D2D1_MATRIX_3X2_F",
+  "fields":[{"name":"_11"},{"name":"_12"},{"name":"_21"},{"name":"_22"},{"name":"_31"},{"name":"_32"}],
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
   "type":"com.sun.javafx.font.directwrite.D2D1_MATRIX_3X2_F",
   "fields":[{"name":"_11"},{"name":"_12"},{"name":"_21"},{"name":"_22"},{"name":"_31"},{"name":"_32"}],
   "methods":[{"name":"<init>","parameterTypes":[] }]
@@ -51,8 +61,23 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
+  "type":"com.sun.javafx.font.directwrite.D2D1_PIXEL_FORMAT",
+  "fields":[{"name":"alphaMode"},{"name":"format"}],
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
   "type":"com.sun.javafx.font.directwrite.D2D1_POINT_2F",
   "fields":[{"name":"x"},{"name":"y"}],
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "type":"com.sun.javafx.font.directwrite.D2D1_POINT_2F",
+  "fields":[{"name":"x"},{"name":"y"}],
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "type":"com.sun.javafx.font.directwrite.D2D1_RENDER_TARGET_PROPERTIES",
+  "fields":[{"name":"dpiX"},{"name":"dpiY"},{"name":"minLevel"},{"name":"pixelFormat"},{"name":"type"},{"name":"usage"}],
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
@@ -105,6 +130,10 @@
   "methods":[{"name":"<init>","parameterTypes":["int","byte[]","int","float[]","int"] }]
 },
 {
+  "type":"com.sun.javafx.geom.Path2D",
+  "methods":[{"name":"<init>","parameterTypes":["int","byte[]","int","float[]","int"] }]
+},
+{
   "type":"com.sun.javafx.iio.common.ImageLoaderImpl",
   "methods":[{"name":"emitWarning","parameterTypes":["java.lang.String"] }]
 },
@@ -134,8 +163,22 @@
   "methods":[{"name":"<init>","parameterTypes":["int","int","int","int"] }]
 },
 {
+  "type":"java.awt.Insets",
+  "fields":[{"name":"bottom"},{"name":"left"},{"name":"right"},{"name":"top"}],
+  "methods":[{"name":"<init>","parameterTypes":["int","int","int","int"] }]
+},
+{
   "type":"java.awt.Toolkit",
   "methods":[{"name":"getDefaultToolkit","parameterTypes":[] },{"name":"getFontMetrics","parameterTypes":["java.awt.Font"] }]
+},
+{
+  "type":"java.awt.Toolkit",
+  "methods":[{"name":"getDefaultToolkit","parameterTypes":[] },{"name":"getFontMetrics","parameterTypes":["java.awt.Font"] }]
+},
+{
+  "type":"java.awt.image.BufferedImage",
+  "fields":[{"name":"colorModel"},{"name":"imageType"},{"name":"raster"}],
+  "methods":[{"name":"getRGB","parameterTypes":["int","int","int","int","int[]","int","int"] },{"name":"setRGB","parameterTypes":["int","int","int","int","int[]","int","int"] }]
 },
 {
   "type":"java.awt.image.BufferedImage",
@@ -148,12 +191,30 @@
   "methods":[{"name":"getRGBdefault","parameterTypes":[] }]
 },
 {
+  "type":"java.awt.image.ColorModel",
+  "fields":[{"name":"colorSpace"},{"name":"colorSpaceType"},{"name":"isAlphaPremultiplied"},{"name":"is_sRGB"},{"name":"nBits"},{"name":"numComponents"},{"name":"supportsAlpha"},{"name":"transparency"}],
+  "methods":[{"name":"getRGBdefault","parameterTypes":[] }]
+},
+{
+  "type":"java.awt.image.IndexColorModel",
+  "fields":[{"name":"map_size"},{"name":"rgb"},{"name":"transparent_index"}]
+},
+{
   "type":"java.awt.image.IndexColorModel",
   "fields":[{"name":"map_size"},{"name":"rgb"},{"name":"transparent_index"}]
 },
 {
   "type":"java.awt.image.Raster",
   "fields":[{"name":"dataBuffer"},{"name":"height"},{"name":"minX"},{"name":"minY"},{"name":"numBands"},{"name":"numDataElements"},{"name":"sampleModel"},{"name":"sampleModelTranslateX"},{"name":"sampleModelTranslateY"},{"name":"width"}]
+},
+{
+  "type":"java.awt.image.Raster",
+  "fields":[{"name":"dataBuffer"},{"name":"height"},{"name":"minX"},{"name":"minY"},{"name":"numBands"},{"name":"numDataElements"},{"name":"sampleModel"},{"name":"sampleModelTranslateX"},{"name":"sampleModelTranslateY"},{"name":"width"}]
+},
+{
+  "type":"java.awt.image.SampleModel",
+  "fields":[{"name":"height"},{"name":"width"}],
+  "methods":[{"name":"getPixels","parameterTypes":["int","int","int","int","int[]","java.awt.image.DataBuffer"] },{"name":"setPixels","parameterTypes":["int","int","int","int","int[]","java.awt.image.DataBuffer"] }]
 },
 {
   "type":"java.awt.image.SampleModel",
@@ -259,6 +320,14 @@
 {
   "type":"sun.awt.image.BytePackedRaster",
   "fields":[{"name":"data"},{"name":"dataBitOffset"},{"name":"pixelBitStride"},{"name":"scanlineStride"},{"name":"type"}]
+},
+{
+  "type":"sun.awt.image.BytePackedRaster",
+  "fields":[{"name":"data"},{"name":"dataBitOffset"},{"name":"pixelBitStride"},{"name":"scanlineStride"},{"name":"type"}]
+},
+{
+  "type":"sun.java2d.Disposer",
+  "methods":[{"name":"addRecord","parameterTypes":["java.lang.Object","long","long"] }]
 },
 {
   "type":"sun.java2d.Disposer",

@@ -26,6 +26,10 @@
   "methods":[{"name":"getInstance","parameterTypes":[] }]
 },
 {
+  "type":"com.sun.javafx.iio.java2d.J2DImageLoaderFactory",
+  "methods":[{"name":"getInstance","parameterTypes":[] }]
+},
+{
   "type":"com.sun.javafx.logging.PrintLogger",
   "methods":[{"name":"createInstance","parameterTypes":[] }]
 },
@@ -53,6 +57,9 @@
   "type":"com.sun.javafx.tk.quantum.OverlayWarning"
 },
 {
+  "type":"com.sun.javafx.tk.quantum.OverlayWarning"
+},
+{
   "type":"com.sun.javafx.tk.quantum.QuantumToolkit",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
@@ -70,7 +77,7 @@
 },
 {
   "type":"com.sun.prism.shader.FillPgram_Color_Loader",
-  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.io.InputStream"] }]
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.io.InputStream"] },{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
 },
 {
   "type":"com.sun.prism.shader.FillPgram_Color_Loader",
@@ -81,8 +88,12 @@
   "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
 },
 {
+  "type":"com.sun.prism.shader.FillRoundRect_Color_Loader",
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
+},
+{
   "type":"com.sun.prism.shader.Solid_TextureFirstPassLCD_Loader",
-  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.io.InputStream"] }]
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.io.InputStream"] },{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
 },
 {
   "type":"com.sun.prism.shader.Solid_TextureFirstPassLCD_Loader",
@@ -94,14 +105,18 @@
 },
 {
   "type":"com.sun.prism.shader.Solid_TextureRGB_Loader",
-  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.io.InputStream"] }]
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.io.InputStream"] },{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
 },
 {
   "type":"com.sun.prism.shader.Solid_TextureSecondPassLCD_Loader",
-  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.io.InputStream"] }]
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.io.InputStream"] },{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
 },
 {
   "type":"com.sun.prism.shader.Solid_TextureSecondPassLCD_Loader",
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
+},
+{
+  "type":"com.sun.prism.shader.Texture_Color_Loader",
   "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
 },
 {
@@ -157,12 +172,28 @@
   "methods":[{"name":"forName","parameterTypes":["java.lang.Module","java.lang.String"] },{"name":"getModule","parameterTypes":[] }]
 },
 {
+  "type":"java.lang.Class",
+  "methods":[{"name":"forName","parameterTypes":["java.lang.Module","java.lang.String"] },{"name":"getModule","parameterTypes":[] }]
+},
+{
+  "type":"java.lang.Module",
+  "methods":[{"name":"getDescriptor","parameterTypes":[] },{"name":"getLayer","parameterTypes":[] },{"name":"getName","parameterTypes":[] }]
+},
+{
   "type":"java.lang.Module",
   "methods":[{"name":"getDescriptor","parameterTypes":[] },{"name":"getLayer","parameterTypes":[] },{"name":"getName","parameterTypes":[] }]
 },
 {
   "type":"java.lang.ModuleLayer",
   "methods":[{"name":"boot","parameterTypes":[] },{"name":"findModule","parameterTypes":["java.lang.String"] }]
+},
+{
+  "type":"java.lang.ModuleLayer",
+  "methods":[{"name":"boot","parameterTypes":[] },{"name":"findModule","parameterTypes":["java.lang.String"] }]
+},
+{
+  "type":"java.lang.System",
+  "methods":[{"name":"getSecurityManager","parameterTypes":[] }]
 },
 {
   "type":"java.lang.System",
@@ -183,6 +214,10 @@
 {
   "type":"java.nio.ByteOrder",
   "methods":[{"name":"nativeOrder","parameterTypes":[] }]
+},
+{
+  "type":"java.util.concurrent.atomic.AtomicBoolean",
+  "fields":[{"name":"value"}]
 },
 {
   "type":"java.util.concurrent.atomic.AtomicReference",
@@ -209,6 +244,9 @@
 },
 {
   "type":"javafx.scene.Camera"
+},
+{
+  "type":"javafx.scene.Group"
 },
 {
   "type":"javafx.scene.Group"
@@ -289,6 +327,9 @@
   "type":"javafx.scene.shape.Rectangle"
 },
 {
+  "type":"javafx.scene.shape.Rectangle"
+},
+{
   "type":"javafx.scene.shape.Shape"
 },
 {
@@ -328,11 +369,25 @@
   "type":"javax.imageio.spi.ImageReaderSpi"
 },
 {
+  "type":"javax.imageio.spi.ImageReaderSpi"
+},
+{
+  "type":"javax.imageio.spi.ImageReaderWriterSpi",
+  "methods":[{"name":"getFileSuffixes","parameterTypes":[] },{"name":"getFormatNames","parameterTypes":[] },{"name":"getMIMETypes","parameterTypes":[] }]
+},
+{
   "type":"javax.imageio.spi.ImageReaderWriterSpi",
   "methods":[{"name":"getFileSuffixes","parameterTypes":[] },{"name":"getFormatNames","parameterTypes":[] },{"name":"getMIMETypes","parameterTypes":[] }]
 },
 {
   "type":"javax.imageio.spi.ImageWriterSpi"
+},
+{
+  "type":"javax.imageio.spi.ImageWriterSpi"
+},
+{
+  "type":"sun.misc.Unsafe",
+  "fields":[{"name":"theUnsafe"}]
 },
 {
   "type":"sun.misc.Unsafe",
