@@ -2,6 +2,8 @@ package com.sosuisha.imageviewer;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.sosuisha.imageviewer.jfxbuilder.BorderPaneBuilder;
 import com.sosuisha.imageviewer.jfxbuilder.ImageViewBuilder;
@@ -20,7 +22,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 public class ImageViewerWindow {
-    private static int STATUS_HEIGHT = 20;
+    private static final int STATUS_HEIGHT = 20;
     private static final double MAX_DIMENSION = 800.0; // デフォルトの最大サイズ
 
     private double xOffset = 0;
@@ -30,6 +32,7 @@ public class ImageViewerWindow {
 
     private List<File> files = null;
     private ImageView imageView = null;
+    private Map<File, Image> imageCache = new ConcurrentHashMap<>();
     private Stage stage = null;
     private Scene scene = null;
     private File currentFile = null;
@@ -41,6 +44,16 @@ public class ImageViewerWindow {
         this(file, withFrame, null, null);
     }
 
+    /**
+     * Constructs an ImageViewerWindow instance.
+     *
+     * @param file         The image file to be displayed.
+     * @param withFrame    Whether the window should have a frame (decorated or
+     *                     undecorated).
+     * @param position     The initial position of the window on the screen (can be
+     *                     null).
+     * @param initialScale The initial scale of the image (can be null).
+     */
     public ImageViewerWindow(File file, boolean withFrame, Point2D position, Double initialScale) {
         currentFile = file;
         this.withFrame = withFrame;
@@ -60,8 +73,10 @@ public class ImageViewerWindow {
                         .center(imageView)
                         .bottom(
                                 withFrame ? LabelBuilder.create()
-                                        .text((int) imageView.getImage().getWidth() + " x "
-                                                + (int) imageView.getImage().getHeight())
+                                        .text(imageView.getImage() != null
+                                                ? (int) imageView.getImage().getWidth() + " x "
+                                                        + (int) imageView.getImage().getHeight()
+                                                : "No Image")
                                         .style("-fx-text-fill: white")
                                         .padding(new Insets(1, 5, 1, 5))
                                         .prefHeight(STATUS_HEIGHT)
@@ -122,10 +137,10 @@ public class ImageViewerWindow {
                 stage.setX(position.getX());
                 stage.setY(position.getY());
             } else {
-                setWindowSizeFromScale(calcScaleFromMaxDimension(MAX_DIMENSION));
+                Dimension2D stageSize = setWindowSizeFromScale(calcScaleFromMaxDimension(MAX_DIMENSION));
                 var bounds = Screen.getPrimary().getVisualBounds(); // exclude taskbar
-                stage.setX(bounds.getWidth() / 2 - stage.getWidth() / 2);
-                stage.setY(bounds.getHeight() / 2 - stage.getHeight() / 2);
+                stage.setX(bounds.getWidth() / 2 - stageSize.getWidth() / 2);
+                stage.setY(bounds.getHeight() / 2 - stageSize.getHeight() / 2);
             }
         });
 
@@ -135,7 +150,7 @@ public class ImageViewerWindow {
     }
 
     private Image getImageFromFile(File file) {
-        return new Image(file.toURI().toString());
+        return imageCache.computeIfAbsent(file, f -> new Image(f.toURI().toString()));
     }
 
     private double getFrameBorderWidth() {
@@ -146,15 +161,21 @@ public class ImageViewerWindow {
         return stage.getHeight() - scene.getHeight() - getFrameBorderWidth();
     }
 
-    private void setWindowSizeFromScale(double scale) {
+    private Dimension2D setWindowSizeFromScale(double scale) {
         currentScale = scale;
         double windowWidth = orgImageWidth * currentScale + getFrameBorderWidth();
         double windowHeight = orgImageHeight * currentScale + getTitleBarHeight() + (withFrame ? STATUS_HEIGHT : 0);
-        stage.setWidth(windowWidth);
-        stage.setHeight(windowHeight);
+        Platform.runLater(() -> {
+            stage.setWidth(windowWidth);
+            stage.setHeight(windowHeight);
+        });
+        return new Dimension2D(windowWidth, windowHeight);
     }
 
     private double calcScaleFromMaxDimension(double maxDimension) {
+        if (orgImageWidth <= 0 || orgImageHeight <= 0) {
+            return 1; // Default scale if dimensions are invalid
+        }
         return maxDimension > 0 ? Math.min(maxDimension / orgImageWidth, maxDimension / orgImageHeight) : 1;
     }
 

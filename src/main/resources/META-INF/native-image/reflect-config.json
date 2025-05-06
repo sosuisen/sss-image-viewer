@@ -220,6 +220,10 @@
   "fields":[{"name":"value"}]
 },
 {
+  "type":"java.util.concurrent.atomic.AtomicBoolean",
+  "fields":[{"name":"value"}]
+},
+{
   "type":"java.util.concurrent.atomic.AtomicReference",
   "fields":[{"name":"value"}]
 },
