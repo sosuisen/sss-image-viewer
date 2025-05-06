@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.sosuisha</groupId>
   <artifactId>sss-image-viewer</artifactId>
-  <version>1.0.4</version>
+  <version>1.0.5</version>
   <description>Generated from jfx-sss-fxml archetype</description>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
