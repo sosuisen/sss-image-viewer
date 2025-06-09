@@ -52,9 +52,9 @@ public class ImageViewerWindow {
     private ObjectProperty<File> currentFile = new SimpleObjectProperty<>();
     private DoubleProperty orgImageWidth = new SimpleDoubleProperty(0);
     private DoubleProperty orgImageHeight = new SimpleDoubleProperty(0);
-    private double currentScale = 1.0;
-    private Label statusLabel = null;
+    private DoubleProperty currentScale = new SimpleDoubleProperty(1.0);
     private BooleanProperty mousePressed = new SimpleBooleanProperty(false);
+    private Label statusLabel = null;
 
     public ImageViewerWindow(File file, boolean withFrame) {
         this(file, withFrame, null, null);
@@ -103,8 +103,8 @@ public class ImageViewerWindow {
                         .onScroll(event -> {
                             double delta = event.getDeltaY();
                             double scaleFactor = (delta > 0) ? 1.05 : 0.95;
-                            double newScale = currentScale * scaleFactor;
-                            setWindowSizeFromScale(newScale);
+                            double newScale = currentScale.get() * scaleFactor;
+                            currentScale.set(newScale);
                         })
                         .onMousePressed(event -> {
                             xOffset = event.getSceneX();
@@ -138,13 +138,13 @@ public class ImageViewerWindow {
                         case ENTER -> {
                             new ImageViewerWindow(currentFile.get(), !withFrame,
                                     new Point2D(stage.getX(), stage.getY()),
-                                    currentScale);
+                                    currentScale.get());
                             stage.close();
                         }
                         case D -> {
                             new ImageViewerWindow(currentFile.get(), withFrame,
                                     new Point2D(stage.getX() + 30, stage.getY() + 30),
-                                    currentScale);
+                                    currentScale.get());
                         }
                         default -> {
                         }
@@ -159,27 +159,32 @@ public class ImageViewerWindow {
         if (statusLabel != null) {
             statusLabel.textProperty().bind(Bindings.createStringBinding(() -> {
                 String baseText = (int) orgImageWidth.get() + " x " + (int) orgImageHeight.get();
-                return mousePressed.get() ? 
-                    baseText + " | 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize" : 
-                    baseText;
+                return mousePressed.get()
+                        ? baseText + " | 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize"
+                        : baseText;
             }, orgImageWidth, orgImageHeight, mousePressed));
         }
 
-        stage.titleProperty().bind(Bindings.createStringBinding(() -> 
-            currentFile.get() != null ? currentFile.get().getName() : "No Image",
-            currentFile));
+        stage.titleProperty()
+                .bind(Bindings.createStringBinding(
+                        () -> currentFile.get() != null ? currentFile.get().getName() : "No Image",
+                        currentFile));
 
+        stage.setWidth(1);
+        stage.setHeight(1);
         Platform.runLater(() -> {
             if (initialScale != null) {
-                setWindowSizeFromScale(initialScale);
+                currentScale.set(initialScale);
                 stage.setX(position.getX());
                 stage.setY(position.getY());
             } else {
-                Dimension2D stageSize = setWindowSizeFromScale(calcScaleFromMaxDimension(MAX_DIMENSION));
+                currentScale.set(calcScaleFromMaxDimension(MAX_DIMENSION));
+                var windowSize = getWindowSize();
                 var bounds = Screen.getPrimary().getVisualBounds(); // exclude taskbar
-                stage.setX(bounds.getWidth() / 2 - stageSize.getWidth() / 2);
-                stage.setY(bounds.getHeight() / 2 - stageSize.getHeight() / 2);
+                stage.setX(bounds.getWidth() / 2 - windowSize.getWidth() / 2);
+                stage.setY(bounds.getHeight() / 2 - windowSize.getHeight() / 2);
             }
+            currentScale.subscribe(_ -> setWindowSizeFromScale());
         });
 
         stage.setScene(scene);
@@ -202,19 +207,23 @@ public class ImageViewerWindow {
         return orgImageWidth.get() >= orgImageHeight.get() ? AspectRatio.LANDSCAPE : AspectRatio.PORTRAIT;
     }
 
-    private Dimension2D setWindowSizeFromScale(double scale) {
-        currentScale = scale;
-        double windowWidth = orgImageWidth.get() * currentScale + getFrameBorderWidth();
-        double windowHeight = orgImageHeight.get() * currentScale + getTitleBarHeight() + (withFrame ? STATUS_HEIGHT : 0);
+    private Dimension2D getWindowSize() {
+        return new Dimension2D(orgImageWidth.get() * currentScale.get() + getFrameBorderWidth(),
+                orgImageHeight.get() * currentScale.get() + getTitleBarHeight()
+                        + (withFrame ? STATUS_HEIGHT : 0));
+    }
+
+    private void setWindowSizeFromScale() {
+        var windowSize = getWindowSize();
 
         AspectRatio aspectRatio = getAspectRatio();
-        aspectRatioSizes.put(aspectRatio, new Dimension2D(orgImageWidth.get() * currentScale, orgImageHeight.get() * currentScale));
+        aspectRatioSizes.put(aspectRatio,
+                new Dimension2D(orgImageWidth.get() * currentScale.get(), orgImageHeight.get() * currentScale.get()));
 
         Platform.runLater(() -> {
-            stage.setWidth(windowWidth);
-            stage.setHeight(windowHeight);
+            stage.setWidth(windowSize.getWidth());
+            stage.setHeight(windowSize.getHeight());
         });
-        return new Dimension2D(windowWidth, windowHeight);
     }
 
     private double calcScaleFromMaxDimension(double maxDimension) {
@@ -248,7 +257,7 @@ public class ImageViewerWindow {
         AspectRatio aspectRatio = getAspectRatio();
         Dimension2D savedSize = aspectRatioSizes.get(aspectRatio);
         double maxDimension = savedSize != null ? Math.max(savedSize.getWidth(), savedSize.getHeight()) : MAX_DIMENSION;
-        setWindowSizeFromScale(calcScaleFromMaxDimension(maxDimension));
+        currentScale.set(calcScaleFromMaxDimension(maxDimension));
     }
 
     private void getPreviousImage(File file) {
