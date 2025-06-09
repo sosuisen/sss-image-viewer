@@ -25,6 +25,12 @@ public class ImageViewerWindow {
     private static final int STATUS_HEIGHT = 20;
     private static final double MAX_DIMENSION = 800.0; // デフォルトの最大サイズ
 
+    private enum AspectRatio {
+        LANDSCAPE, PORTRAIT
+    }
+
+    private static final Map<AspectRatio, Dimension2D> aspectRatioSizes = new ConcurrentHashMap<>();
+
     private double xOffset = 0;
     private double yOffset = 0;
 
@@ -161,10 +167,18 @@ public class ImageViewerWindow {
         return stage.getHeight() - scene.getHeight() - getFrameBorderWidth();
     }
 
+    private AspectRatio getAspectRatio() {
+        return orgImageWidth >= orgImageHeight ? AspectRatio.LANDSCAPE : AspectRatio.PORTRAIT;
+    }
+
     private Dimension2D setWindowSizeFromScale(double scale) {
         currentScale = scale;
         double windowWidth = orgImageWidth * currentScale + getFrameBorderWidth();
         double windowHeight = orgImageHeight * currentScale + getTitleBarHeight() + (withFrame ? STATUS_HEIGHT : 0);
+
+        AspectRatio aspectRatio = getAspectRatio();
+        aspectRatioSizes.put(aspectRatio, new Dimension2D(orgImageWidth * currentScale, orgImageHeight * currentScale));
+
         Platform.runLater(() -> {
             stage.setWidth(windowWidth);
             stage.setHeight(windowHeight);
@@ -200,12 +214,19 @@ public class ImageViewerWindow {
         }
     }
 
+    private void applyAspectRatioSize() {
+        AspectRatio aspectRatio = getAspectRatio();
+        Dimension2D savedSize = aspectRatioSizes.get(aspectRatio);
+        double maxDimension = savedSize != null ? Math.max(savedSize.getWidth(), savedSize.getHeight()) : MAX_DIMENSION;
+        setWindowSizeFromScale(calcScaleFromMaxDimension(maxDimension));
+    }
+
     private void getPreviousImage(File file) {
         updateFileList(file);
         var index = files.indexOf(file);
         var nextIndex = index > 0 ? index - 1 : files.size() - 1;
         setImage(files.get(nextIndex));
-        setWindowSizeFromScale(calcScaleFromMaxDimension(MAX_DIMENSION));
+        applyAspectRatioSize();
     }
 
     private void getNextImage(File file) {
@@ -213,6 +234,6 @@ public class ImageViewerWindow {
         var index = files.indexOf(file);
         var nextIndex = index < files.size() - 1 ? index + 1 : 0;
         setImage(files.get(nextIndex));
-        setWindowSizeFromScale(calcScaleFromMaxDimension(MAX_DIMENSION));
+        applyAspectRatioSize();
     }
 }
