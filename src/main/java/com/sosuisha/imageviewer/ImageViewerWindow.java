@@ -173,6 +173,11 @@ public class ImageViewerWindow {
         stage.setWidth(1);
         stage.setHeight(1);
         Platform.runLater(() -> {
+            // It seems that GraalVM Native Image does not support subscribe method.
+            // currentScale.subscribe(scale -> setWindowSizeFromScale(scale.doubleValue()));
+            currentScale.addListener((_, _, newValue) -> {
+                setWindowSizeFromScale(newValue.doubleValue());
+            });
             if (initialScale != null) {
                 currentScale.set(initialScale);
                 stage.setX(position.getX());
@@ -184,7 +189,6 @@ public class ImageViewerWindow {
                 stage.setX(bounds.getWidth() / 2 - windowSize.getWidth() / 2);
                 stage.setY(bounds.getHeight() / 2 - windowSize.getHeight() / 2);
             }
-            currentScale.subscribe(_ -> setWindowSizeFromScale());
         });
 
         stage.setScene(scene);
@@ -213,12 +217,12 @@ public class ImageViewerWindow {
                         + (withFrame ? STATUS_HEIGHT : 0));
     }
 
-    private void setWindowSizeFromScale() {
+    private void setWindowSizeFromScale(double scale) {
         var windowSize = getWindowSize();
 
         AspectRatio aspectRatio = getAspectRatio();
         aspectRatioSizes.put(aspectRatio,
-                new Dimension2D(orgImageWidth.get() * currentScale.get(), orgImageHeight.get() * currentScale.get()));
+                new Dimension2D(orgImageWidth.get() * scale, orgImageHeight.get() * scale));
 
         Platform.runLater(() -> {
             stage.setWidth(windowSize.getWidth());
