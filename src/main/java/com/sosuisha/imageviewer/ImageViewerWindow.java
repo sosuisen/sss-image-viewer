@@ -14,12 +14,15 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Screen;
@@ -46,11 +49,11 @@ public class ImageViewerWindow {
     private Map<File, Image> imageCache = new ConcurrentHashMap<>();
     private Stage stage = null;
     private Scene scene = null;
-    private File currentFile = null;
+    private ObjectProperty<File> currentFile = new SimpleObjectProperty<>();
     private DoubleProperty orgImageWidth = new SimpleDoubleProperty(0);
     private DoubleProperty orgImageHeight = new SimpleDoubleProperty(0);
     private double currentScale = 1.0;
-    private javafx.scene.control.Label statusLabel = null;
+    private Label statusLabel = null;
     private BooleanProperty mousePressed = new SimpleBooleanProperty(false);
 
     public ImageViewerWindow(File file, boolean withFrame) {
@@ -68,7 +71,7 @@ public class ImageViewerWindow {
      * @param initialScale The initial scale of the image (can be null).
      */
     public ImageViewerWindow(File file, boolean withFrame, Point2D position, Double initialScale) {
-        currentFile = file;
+        currentFile.set(file);
         this.withFrame = withFrame;
 
         stage = new Stage(withFrame ? StageStyle.DECORATED : StageStyle.UNDECORATED);
@@ -78,7 +81,7 @@ public class ImageViewerWindow {
                 .smooth(true)
                 .build();
 
-        setImage(currentFile);
+        setImage(currentFile.get());
 
         scene = SceneBuilder.create()
                 .root(BorderPaneBuilder.create()
@@ -127,19 +130,19 @@ public class ImageViewerWindow {
                         case ESCAPE -> stage.close();
                         case F11 -> stage.setFullScreen(!stage.isFullScreen());
                         case LEFT -> {
-                            getPreviousImage(currentFile);
+                            getPreviousImage(currentFile.get());
                         }
                         case RIGHT -> {
-                            getNextImage(currentFile);
+                            getNextImage(currentFile.get());
                         }
                         case ENTER -> {
-                            new ImageViewerWindow(currentFile, !withFrame,
+                            new ImageViewerWindow(currentFile.get(), !withFrame,
                                     new Point2D(stage.getX(), stage.getY()),
                                     currentScale);
                             stage.close();
                         }
                         case D -> {
-                            new ImageViewerWindow(currentFile, withFrame,
+                            new ImageViewerWindow(currentFile.get(), withFrame,
                                     new Point2D(stage.getX() + 30, stage.getY() + 30),
                                     currentScale);
                         }
@@ -162,6 +165,10 @@ public class ImageViewerWindow {
             }, orgImageWidth, orgImageHeight, mousePressed));
         }
 
+        stage.titleProperty().bind(Bindings.createStringBinding(() -> 
+            currentFile.get() != null ? currentFile.get().getName() : "No Image",
+            currentFile));
+
         Platform.runLater(() -> {
             if (initialScale != null) {
                 setWindowSizeFromScale(initialScale);
@@ -176,7 +183,6 @@ public class ImageViewerWindow {
         });
 
         stage.setScene(scene);
-        stage.setTitle(currentFile.getName());
         stage.show();
     }
 
@@ -219,12 +225,11 @@ public class ImageViewerWindow {
     }
 
     private void setImage(File file) {
-        currentFile = file;
+        currentFile.set(file);
         var image = getImageFromFile(file);
         orgImageWidth.set(image.getWidth());
         orgImageHeight.set(image.getHeight());
         imageView.setImage(image);
-        stage.setTitle("Image: " + currentFile.getName());
     }
 
     private void updateFileList(File file) {
