@@ -11,6 +11,11 @@ import com.sosuisha.imageviewer.jfxbuilder.LabelBuilder;
 import com.sosuisha.imageviewer.jfxbuilder.SceneBuilder;
 
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.Insets;
@@ -42,9 +47,11 @@ public class ImageViewerWindow {
     private Stage stage = null;
     private Scene scene = null;
     private File currentFile = null;
-    private double orgImageWidth = 0;
-    private double orgImageHeight = 0;
+    private DoubleProperty orgImageWidth = new SimpleDoubleProperty(0);
+    private DoubleProperty orgImageHeight = new SimpleDoubleProperty(0);
     private double currentScale = 1.0;
+    private javafx.scene.control.Label statusLabel = null;
+    private BooleanProperty mousePressed = new SimpleBooleanProperty(false);
 
     public ImageViewerWindow(File file, boolean withFrame) {
         this(file, withFrame, null, null);
@@ -78,7 +85,7 @@ public class ImageViewerWindow {
                         .style("-fx-background-color: black")
                         .center(imageView)
                         .bottom(
-                                withFrame ? LabelBuilder.create()
+                                withFrame ? (statusLabel = LabelBuilder.create()
                                         .text(imageView.getImage() != null
                                                 ? (int) imageView.getImage().getWidth() + " x "
                                                         + (int) imageView.getImage().getHeight()
@@ -88,7 +95,7 @@ public class ImageViewerWindow {
                                         .prefHeight(STATUS_HEIGHT)
                                         .minHeight(STATUS_HEIGHT)
                                         .maxHeight(STATUS_HEIGHT)
-                                        .build()
+                                        .build())
                                         : null)
                         .onScroll(event -> {
                             double delta = event.getDeltaY();
@@ -99,10 +106,14 @@ public class ImageViewerWindow {
                         .onMousePressed(event -> {
                             xOffset = event.getSceneX();
                             yOffset = event.getSceneY() + (withFrame ? getTitleBarHeight() : 0);
+                            mousePressed.set(true);
                         })
                         .onMouseDragged(event -> {
                             stage.setX(event.getScreenX() - xOffset);
                             stage.setY(event.getScreenY() - yOffset);
+                        })
+                        .onMouseReleased(event -> {
+                            mousePressed.set(false);
                         })
                         .build())
                 .onMouseClicked(event -> {
@@ -142,6 +153,15 @@ public class ImageViewerWindow {
         imageView.fitHeightProperty()
                 .bind(scene.heightProperty().map(h -> h.doubleValue() - (withFrame ? STATUS_HEIGHT : 0)));
 
+        if (statusLabel != null) {
+            statusLabel.textProperty().bind(Bindings.createStringBinding(() -> {
+                String baseText = (int) orgImageWidth.get() + " x " + (int) orgImageHeight.get();
+                return mousePressed.get() ? 
+                    baseText + " | 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize" : 
+                    baseText;
+            }, orgImageWidth, orgImageHeight, mousePressed));
+        }
+
         Platform.runLater(() -> {
             if (initialScale != null) {
                 setWindowSizeFromScale(initialScale);
@@ -173,16 +193,16 @@ public class ImageViewerWindow {
     }
 
     private AspectRatio getAspectRatio() {
-        return orgImageWidth >= orgImageHeight ? AspectRatio.LANDSCAPE : AspectRatio.PORTRAIT;
+        return orgImageWidth.get() >= orgImageHeight.get() ? AspectRatio.LANDSCAPE : AspectRatio.PORTRAIT;
     }
 
     private Dimension2D setWindowSizeFromScale(double scale) {
         currentScale = scale;
-        double windowWidth = orgImageWidth * currentScale + getFrameBorderWidth();
-        double windowHeight = orgImageHeight * currentScale + getTitleBarHeight() + (withFrame ? STATUS_HEIGHT : 0);
+        double windowWidth = orgImageWidth.get() * currentScale + getFrameBorderWidth();
+        double windowHeight = orgImageHeight.get() * currentScale + getTitleBarHeight() + (withFrame ? STATUS_HEIGHT : 0);
 
         AspectRatio aspectRatio = getAspectRatio();
-        aspectRatioSizes.put(aspectRatio, new Dimension2D(orgImageWidth * currentScale, orgImageHeight * currentScale));
+        aspectRatioSizes.put(aspectRatio, new Dimension2D(orgImageWidth.get() * currentScale, orgImageHeight.get() * currentScale));
 
         Platform.runLater(() -> {
             stage.setWidth(windowWidth);
@@ -192,17 +212,17 @@ public class ImageViewerWindow {
     }
 
     private double calcScaleFromMaxDimension(double maxDimension) {
-        if (orgImageWidth <= 0 || orgImageHeight <= 0) {
+        if (orgImageWidth.get() <= 0 || orgImageHeight.get() <= 0) {
             return 1; // Default scale if dimensions are invalid
         }
-        return maxDimension > 0 ? Math.min(maxDimension / orgImageWidth, maxDimension / orgImageHeight) : 1;
+        return maxDimension > 0 ? Math.min(maxDimension / orgImageWidth.get(), maxDimension / orgImageHeight.get()) : 1;
     }
 
     private void setImage(File file) {
         currentFile = file;
         var image = getImageFromFile(file);
-        orgImageWidth = image.getWidth();
-        orgImageHeight = image.getHeight();
+        orgImageWidth.set(image.getWidth());
+        orgImageHeight.set(image.getHeight());
         imageView.setImage(image);
         stage.setTitle("Image: " + currentFile.getName());
     }
