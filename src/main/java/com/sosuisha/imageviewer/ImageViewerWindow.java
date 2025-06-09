@@ -127,6 +127,11 @@ public class ImageViewerWindow {
                                     currentScale);
                             stage.close();
                         }
+                        case D -> {
+                            new ImageViewerWindow(currentFile, withFrame,
+                                    new Point2D(stage.getX() + 30, stage.getY() + 30),
+                                    currentScale);
+                        }
                         default -> {
                         }
                     }
