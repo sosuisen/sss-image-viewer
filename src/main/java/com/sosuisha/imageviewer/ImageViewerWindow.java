@@ -86,7 +86,21 @@ public class ImageViewerWindow {
 
         setImage(currentFile.get());
 
-        scene = SceneBuilder.create()
+        scene = buildScene();
+
+        setupWindowSizeBinding();
+        setupTitleBinding();
+        setupStatusLabelBinding();
+
+        stage.setWidth(1);
+        stage.setHeight(1);
+        Platform.runLater(() -> initializeWindowSizeAndPosition(position, initialScale));
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    private Scene buildScene() {
+        return SceneBuilder.create()
                 .root(BorderPaneBuilder.create()
                         .style("-fx-background-color: black")
                         .center(imageView)
@@ -113,11 +127,22 @@ public class ImageViewerWindow {
                     }
                 })
                 .build();
+    }
 
+    private void setupWindowSizeBinding() {
         imageView.fitWidthProperty().bind(scene.widthProperty());
         imageView.fitHeightProperty()
                 .bind(scene.heightProperty().map(h -> h.doubleValue() - (withFrame ? STATUS_HEIGHT : 0)));
+    }
 
+    private void setupTitleBinding() {
+        stage.titleProperty()
+                .bind(Bindings.createStringBinding(
+                        () -> currentFile.get() != null ? currentFile.get().getName() : "No Image",
+                        currentFile));
+    }
+
+    private void setupStatusLabelBinding() {
         if (statusLabel != null) {
             statusLabel.textProperty().bind(Bindings.createStringBinding(() -> {
                 String markPrefix = "";
@@ -132,34 +157,25 @@ public class ImageViewerWindow {
                         : baseText;
             }, orgImageWidth, orgImageHeight, mousePressed, currentFile, markedImages));
         }
+    }
 
-        stage.titleProperty()
-                .bind(Bindings.createStringBinding(
-                        () -> currentFile.get() != null ? currentFile.get().getName() : "No Image",
-                        currentFile));
-
-        stage.setWidth(1);
-        stage.setHeight(1);
-        Platform.runLater(() -> {
-            // It seems that GraalVM Native Image does not support subscribe method.
-            // currentScale.subscribe(scale -> setWindowSizeFromScale(scale.doubleValue()));
-            currentScale.addListener((_, _, newValue) -> {
-                setWindowSizeFromScale(newValue.doubleValue());
-            });
-            if (initialScale != null) {
-                currentScale.set(initialScale);
-                stage.setX(position.getX());
-                stage.setY(position.getY());
-            } else {
-                currentScale.set(calcScaleFromMaxDimension(MAX_DIMENSION));
-                var windowSize = getWindowSize();
-                var bounds = Screen.getPrimary().getVisualBounds(); // exclude taskbar
-                stage.setX(bounds.getWidth() / 2 - windowSize.getWidth() / 2);
-                stage.setY(bounds.getHeight() / 2 - windowSize.getHeight() / 2);
-            }
+    private void initializeWindowSizeAndPosition(Point2D position, Double initialScale) {
+        // It seems that GraalVM Native Image does not support subscribe method.
+        // currentScale.subscribe(scale -> setWindowSizeFromScale(scale.doubleValue()));
+        currentScale.addListener((_, _, newValue) -> {
+            setWindowSizeFromScale(newValue.doubleValue());
         });
-        stage.setScene(scene);
-        stage.show();
+        if (initialScale != null) {
+            currentScale.set(initialScale);
+            stage.setX(position.getX());
+            stage.setY(position.getY());
+        } else {
+            currentScale.set(calcScaleFromMaxDimension(MAX_DIMENSION));
+            var windowSize = getWindowSize();
+            var bounds = Screen.getPrimary().getVisualBounds(); // exclude taskbar
+            stage.setX(bounds.getWidth() / 2 - windowSize.getWidth() / 2);
+            stage.setY(bounds.getHeight() / 2 - windowSize.getHeight() / 2);
+        }
     }
 
     private void dragWindow(Scene scene) {
