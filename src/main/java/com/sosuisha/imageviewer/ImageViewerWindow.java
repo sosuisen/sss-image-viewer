@@ -69,6 +69,8 @@ public class ImageViewerWindow {
     private DoubleProperty currentFullScreenScale = new SimpleDoubleProperty(1.0);
     private DoubleProperty imageTranslateX = new SimpleDoubleProperty(0.0);
     private DoubleProperty imageTranslateY = new SimpleDoubleProperty(0.0);
+    // Manual full-screen state management: stage.isFullScreen() is not correctly captured
+    // when we need to judge it in ESCAPE key press event handler
     private BooleanProperty isFullScreen = new SimpleBooleanProperty(false);
     private BooleanProperty mousePressed = new SimpleBooleanProperty(false);
     private BooleanProperty slideshowMode = new SimpleBooleanProperty(false);
@@ -269,7 +271,16 @@ public class ImageViewerWindow {
     private void handleKeyPressed(javafx.scene.input.KeyEvent event) {
         var keyCode = event.getCode();
         switch (keyCode) {
-            case ESCAPE -> stage.close();
+            case ESCAPE -> {
+                if (isFullScreen.get()) {
+                    isFullScreen.set(false);
+                    currentFullScreenScale.set(1.0);
+                    imageTranslateX.set(0.0);
+                    imageTranslateY.set(0.0);
+                } else {
+                    stage.close();
+                }
+            }
             case F11 -> toggleFullScreen();
             case LEFT -> {
                 if (slideshowMode.get()) {
