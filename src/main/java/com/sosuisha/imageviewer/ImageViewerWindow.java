@@ -18,6 +18,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.Insets;
@@ -47,6 +49,7 @@ public class ImageViewerWindow {
     private List<File> files = null;
     private ImageView imageView = null;
     private Map<File, Image> imageCache = new ConcurrentHashMap<>();
+    private ObservableList<File> markedImages = FXCollections.observableArrayList();
     private Stage stage = null;
     private Scene scene = null;
     private ObjectProperty<File> currentFile = new SimpleObjectProperty<>();
@@ -146,6 +149,9 @@ public class ImageViewerWindow {
                                     new Point2D(stage.getX() + 30, stage.getY() + 30),
                                     currentScale.get());
                         }
+                        case SPACE -> {
+                            toggleMarkOnCurrentImage();
+                        }
                         default -> {
                         }
                     }
@@ -158,11 +164,16 @@ public class ImageViewerWindow {
 
         if (statusLabel != null) {
             statusLabel.textProperty().bind(Bindings.createStringBinding(() -> {
-                String baseText = (int) orgImageWidth.get() + " x " + (int) orgImageHeight.get();
+                String markPrefix = "";
+                if (isCurrentImageMarked()) {
+                    String pos = getMarkedImagePosition();
+                    markPrefix = pos.isEmpty() ? "" : "#" + pos + " ";
+                }
+                String baseText = markPrefix + (int) orgImageWidth.get() + " x " + (int) orgImageHeight.get();
                 return mousePressed.get()
-                        ? baseText + " | 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize"
+                        ? baseText + " | 'Space': mark/unmark, 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize"
                         : baseText;
-            }, orgImageWidth, orgImageHeight, mousePressed));
+            }, orgImageWidth, orgImageHeight, mousePressed, currentFile, markedImages));
         }
 
         stage.titleProperty()
@@ -278,5 +289,31 @@ public class ImageViewerWindow {
         var nextIndex = index < files.size() - 1 ? index + 1 : 0;
         setImage(files.get(nextIndex));
         applyAspectRatioSize();
+    }
+
+    private void toggleMarkOnCurrentImage() {
+        File current = currentFile.get();
+        if (current != null) {
+            if (markedImages.contains(current)) {
+                markedImages.remove(current);
+            } else {
+                markedImages.add(current);
+            }
+        }
+    }
+
+    private boolean isCurrentImageMarked() {
+        File current = currentFile.get();
+        return current != null && markedImages.contains(current);
+    }
+
+    private String getMarkedImagePosition() {
+        File current = currentFile.get();
+        if (current == null || !markedImages.contains(current)) {
+            return "";
+        }
+        
+        int position = markedImages.indexOf(current) + 1;
+        return position + "/" + markedImages.size();
     }
 }
