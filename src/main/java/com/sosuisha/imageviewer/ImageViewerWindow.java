@@ -42,6 +42,7 @@ import javafx.stage.StageStyle;
 public class ImageViewerWindow {
     private static final int STATUS_HEIGHT = 20;
     private static final double MAX_DIMENSION = 800.0; // デフォルトの最大サイズ
+    private static final int CROSSFADE_DURATION_MILLIS = 300;
 
     private enum AspectRatio {
         LANDSCAPE, PORTRAIT
@@ -324,11 +325,19 @@ public class ImageViewerWindow {
         orgImageWidth.set(image.getWidth());
         orgImageHeight.set(image.getHeight());
 
-        if (animate && imageView.getImage() != null) {
+        if (animate && imageView.getImage() != null && shouldUseCrossFade()) {
             crossFadeToImage(image);
         } else {
             imageView.setImage(image);
         }
+    }
+
+    private boolean shouldUseCrossFade() {
+        // Don't use cross-fade if slideshow is active and interval is too short
+        if (slideshowMode.get() && slideshowInterval > 0 && slideshowInterval * 1000 <= CROSSFADE_DURATION_MILLIS) {
+            return false;
+        }
+        return true;
     }
 
     private void cancelCurrentAnimation() {
@@ -348,13 +357,13 @@ public class ImageViewerWindow {
         imageView2.setImage(newImage);
 
         // Create fade out animation for current image
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(300), imageView);
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(CROSSFADE_DURATION_MILLIS), imageView);
         fadeOut.setFromValue(1.0);
-        fadeOut.setToValue(0.5);
+        fadeOut.setToValue(0.7);
 
         // Create fade in animation for new image
-        FadeTransition fadeIn = new FadeTransition(Duration.millis(300), imageView2);
-        fadeIn.setFromValue(0.5);
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(CROSSFADE_DURATION_MILLIS), imageView2);
+        fadeIn.setFromValue(0.7);
         fadeIn.setToValue(1.0);
 
         // Create parallel transition
