@@ -5565,7 +5565,13 @@
   },{
     "pattern":"javafx.graphics:\\Qvcruntime140_1.dll\\E"
   },{
+    "pattern":"jdk.graal.compiler:\\Qjdk\/graal\/compiler\/hotspot\/HotSpotBackend.class\\E"
+  },{
+    "pattern":"jdk.graal.compiler:\\Qjdk\/graal\/compiler\/hotspot\/amd64\/AMD64MathStub.class\\E"
+  },{
     "pattern":"jdk.graal.compiler:\\Qjdk\/graal\/compiler\/hotspot\/replacements\/ClassGetHubNode.class\\E"
+  },{
+    "pattern":"jdk.graal.compiler:\\Qjdk\/graal\/compiler\/hotspot\/replacements\/DigestBaseSnippets.class\\E"
   },{
     "pattern":"jdk.graal.compiler:\\Qjdk\/graal\/compiler\/hotspot\/replacements\/HotSpotAllocationSnippets.class\\E"
   },{
