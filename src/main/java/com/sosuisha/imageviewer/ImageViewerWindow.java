@@ -67,6 +67,8 @@ public class ImageViewerWindow {
     private DoubleProperty orgImageHeight = new SimpleDoubleProperty(0);
     private DoubleProperty currentScale = new SimpleDoubleProperty(1.0);
     private DoubleProperty currentFullScreenScale = new SimpleDoubleProperty(1.0);
+    private DoubleProperty imageTranslateX = new SimpleDoubleProperty(0.0);
+    private DoubleProperty imageTranslateY = new SimpleDoubleProperty(0.0);
     private BooleanProperty mousePressed = new SimpleBooleanProperty(false);
     private BooleanProperty slideshowMode = new SimpleBooleanProperty(false);
     private Timeline slideshowTimer = null;
@@ -199,6 +201,24 @@ public class ImageViewerWindow {
         currentFullScreenScale.addListener((_, _, newValue) -> {
             setImageScaleInFullScreen(newValue.doubleValue());
         });
+        
+        imageTranslateX.addListener((_, _, newValue) -> {
+            if (stage.isFullScreen()) {
+                Platform.runLater(() -> {
+                    imageView.setTranslateX(newValue.doubleValue());
+                    imageView2.setTranslateX(newValue.doubleValue());
+                });
+            }
+        });
+        
+        imageTranslateY.addListener((_, _, newValue) -> {
+            if (stage.isFullScreen()) {
+                Platform.runLater(() -> {
+                    imageView.setTranslateY(newValue.doubleValue());
+                    imageView2.setTranslateY(newValue.doubleValue());
+                });
+            }
+        });
         if (initialScale != null) {
             currentScale.set(initialScale);
             stage.setX(position.getX());
@@ -219,8 +239,17 @@ public class ImageViewerWindow {
             mousePressed.set(true);
         });
         scene.setOnMouseDragged(event -> {
-            stage.setX(event.getScreenX() - xOffset);
-            stage.setY(event.getScreenY() - yOffset);
+            if (stage.isFullScreen()) {
+                double deltaX = event.getSceneX() - xOffset;
+                double deltaY = event.getSceneY() - yOffset;
+                imageTranslateX.set(imageTranslateX.get() + deltaX);
+                imageTranslateY.set(imageTranslateY.get() + deltaY);
+                xOffset = event.getSceneX();
+                yOffset = event.getSceneY();
+            } else {
+                stage.setX(event.getScreenX() - xOffset);
+                stage.setY(event.getScreenY() - yOffset);
+            }
         });
         scene.setOnMouseReleased(_ -> {
             mousePressed.set(false);
@@ -321,8 +350,12 @@ public class ImageViewerWindow {
         Platform.runLater(() -> {
             imageView.setScaleX(scale);
             imageView.setScaleY(scale);
+            imageView.setTranslateX(imageTranslateX.get());
+            imageView.setTranslateY(imageTranslateY.get());
             imageView2.setScaleX(scale);
             imageView2.setScaleY(scale);
+            imageView2.setTranslateX(imageTranslateX.get());
+            imageView2.setTranslateY(imageTranslateY.get());
         });
     }
 
@@ -330,6 +363,8 @@ public class ImageViewerWindow {
         boolean wasFullScreen = stage.isFullScreen();
         stage.setFullScreen(!wasFullScreen);
         currentFullScreenScale.set(1.0);
+        imageTranslateX.set(0.0);
+        imageTranslateY.set(0.0);
     }
 
     private double calcScaleFromMaxDimension(double maxDimension) {
