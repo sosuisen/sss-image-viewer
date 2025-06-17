@@ -64,6 +64,7 @@ public class ImageViewerWindow {
     private BooleanProperty mousePressed = new SimpleBooleanProperty(false);
     private BooleanProperty slideshowMode = new SimpleBooleanProperty(false);
     private Timeline slideshowTimer = null;
+    private double slideshowInterval = 0.0;
     private Label statusLabel = null;
 
     public ImageViewerWindow(File file, boolean withFrame) {
@@ -375,7 +376,7 @@ public class ImageViewerWindow {
             return;
         }
 
-        var dialog = TextInputDialogBuilder.create("2")
+        var dialog = TextInputDialogBuilder.create(String.valueOf(slideshowInterval))
                 .title("Slideshow Settings")
                 .headerText("Enter slideshow interval")
                 .contentText("Seconds between images (0 = manual navigation):")
@@ -385,6 +386,7 @@ public class ImageViewerWindow {
         if (result.isPresent()) {
             try {
                 double seconds = Double.parseDouble(result.get());
+                slideshowInterval = seconds;
                 slideshowMode.set(true);
                 
                 if (seconds > 0) {
