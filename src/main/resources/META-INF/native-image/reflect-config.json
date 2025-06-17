@@ -4,6 +4,13 @@
   "methods":[{"name":"<init>","parameterTypes":[] },{"name":"main","parameterTypes":["java.lang.String[]"] }]
 },
 {
+  "type":"com.sosuisha.imageviewer.App",
+  "methods":[{"name":"<init>","parameterTypes":[] },{"name":"main","parameterTypes":["java.lang.String[]"] }]
+},
+{
+  "type":"com.sun.glass.ui.Screen"
+},
+{
   "type":"com.sun.glass.ui.Screen"
 },
 {
@@ -11,7 +18,19 @@
   "methods":[{"name":"getFactory","parameterTypes":[] }]
 },
 {
+  "type":"com.sun.javafx.font.directwrite.DWFactory",
+  "methods":[{"name":"getFactory","parameterTypes":[] }]
+},
+{
   "type":"com.sun.javafx.logging.PrintLogger",
+  "methods":[{"name":"createInstance","parameterTypes":[] }]
+},
+{
+  "type":"com.sun.javafx.logging.PrintLogger",
+  "methods":[{"name":"createInstance","parameterTypes":[] }]
+},
+{
+  "type":"com.sun.javafx.logging.jfr.JFRPulseLogger",
   "methods":[{"name":"createInstance","parameterTypes":[] }]
 },
 {
@@ -23,7 +42,18 @@
   "methods":[{"name":"getResource","parameterTypes":["java.lang.String"] }]
 },
 {
+  "type":"com.sun.javafx.scene.control.skin.Utils",
+  "methods":[{"name":"getResource","parameterTypes":["java.lang.String"] }]
+},
+{
   "type":"com.sun.javafx.tk.quantum.OverlayWarning"
+},
+{
+  "type":"com.sun.javafx.tk.quantum.OverlayWarning"
+},
+{
+  "type":"com.sun.javafx.tk.quantum.QuantumToolkit",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
   "type":"com.sun.javafx.tk.quantum.QuantumToolkit",
@@ -34,7 +64,23 @@
   "methods":[{"name":"getFontFactory","parameterTypes":[] },{"name":"getPipeline","parameterTypes":[] }]
 },
 {
+  "type":"com.sun.prism.GraphicsPipeline",
+  "methods":[{"name":"getFontFactory","parameterTypes":[] },{"name":"getPipeline","parameterTypes":[] }]
+},
+{
   "type":"com.sun.prism.shader.FillPgram_Color_Loader",
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
+},
+{
+  "type":"com.sun.prism.shader.FillPgram_Color_Loader",
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
+},
+{
+  "type":"com.sun.prism.shader.FillPgram_LinearGradient_PAD_Loader",
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
+},
+{
+  "type":"com.sun.prism.shader.FillRoundRect_Color_Loader",
   "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
 },
 {
@@ -46,7 +92,19 @@
   "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
 },
 {
+  "type":"com.sun.prism.shader.Solid_TextureFirstPassLCD_Loader",
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
+},
+{
   "type":"com.sun.prism.shader.Solid_TextureRGB_Loader",
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
+},
+{
+  "type":"com.sun.prism.shader.Solid_TextureRGB_Loader",
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
+},
+{
+  "type":"com.sun.prism.shader.Solid_TextureSecondPassLCD_Loader",
   "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
 },
 {
@@ -58,8 +116,24 @@
   "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
 },
 {
+  "type":"com.sun.prism.shader.Texture_Color_Loader",
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
+},
+{
+  "type":"com.sun.prism.shader.Texture_LinearGradient_PAD_Loader",
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
+},
+{
   "type":"java.lang.Character",
   "methods":[{"name":"isIdeographic","parameterTypes":["int"] }]
+},
+{
+  "type":"java.lang.Character",
+  "methods":[{"name":"isIdeographic","parameterTypes":["int"] }]
+},
+{
+  "type":"java.lang.Class",
+  "methods":[{"name":"forName","parameterTypes":["java.lang.Module","java.lang.String"] },{"name":"getModule","parameterTypes":[] }]
 },
 {
   "type":"java.lang.Class",
@@ -70,8 +144,20 @@
   "methods":[{"name":"getDescriptor","parameterTypes":[] },{"name":"getLayer","parameterTypes":[] },{"name":"getName","parameterTypes":[] }]
 },
 {
+  "type":"java.lang.Module",
+  "methods":[{"name":"getDescriptor","parameterTypes":[] },{"name":"getLayer","parameterTypes":[] },{"name":"getName","parameterTypes":[] }]
+},
+{
   "type":"java.lang.ModuleLayer",
   "methods":[{"name":"boot","parameterTypes":[] },{"name":"findModule","parameterTypes":["java.lang.String"] }]
+},
+{
+  "type":"java.lang.ModuleLayer",
+  "methods":[{"name":"boot","parameterTypes":[] },{"name":"findModule","parameterTypes":["java.lang.String"] }]
+},
+{
+  "type":"java.lang.System",
+  "methods":[{"name":"getSecurityManager","parameterTypes":[] }]
 },
 {
   "type":"java.lang.System",
@@ -82,8 +168,20 @@
   "methods":[{"name":"order","parameterTypes":["java.nio.ByteOrder"] }]
 },
 {
+  "type":"java.nio.ByteBuffer",
+  "methods":[{"name":"order","parameterTypes":["java.nio.ByteOrder"] }]
+},
+{
   "type":"java.nio.ByteOrder",
   "methods":[{"name":"nativeOrder","parameterTypes":[] }]
+},
+{
+  "type":"java.nio.ByteOrder",
+  "methods":[{"name":"nativeOrder","parameterTypes":[] }]
+},
+{
+  "type":"java.util.concurrent.atomic.AtomicReference",
+  "fields":[{"name":"value"}]
 },
 {
   "type":"java.util.concurrent.atomic.AtomicReference",
@@ -93,7 +191,16 @@
   "type":"javafx.animation.Interpolator"
 },
 {
+  "type":"javafx.animation.Interpolator"
+},
+{
   "type":"javafx.scene.Camera"
+},
+{
+  "type":"javafx.scene.Camera"
+},
+{
+  "type":"javafx.scene.Group"
 },
 {
   "type":"javafx.scene.Group"
@@ -102,7 +209,16 @@
   "type":"javafx.scene.Node"
 },
 {
+  "type":"javafx.scene.Node"
+},
+{
   "type":"javafx.scene.ParallelCamera"
+},
+{
+  "type":"javafx.scene.ParallelCamera"
+},
+{
+  "type":"javafx.scene.Parent"
 },
 {
   "type":"javafx.scene.Parent"
@@ -111,7 +227,16 @@
   "type":"javafx.scene.Scene"
 },
 {
+  "type":"javafx.scene.Scene"
+},
+{
   "type":"javafx.scene.control.Control"
+},
+{
+  "type":"javafx.scene.control.Control"
+},
+{
+  "type":"javafx.scene.control.Labeled"
 },
 {
   "type":"javafx.scene.control.Labeled"
@@ -120,7 +245,16 @@
   "type":"javafx.scene.image.Image"
 },
 {
+  "type":"javafx.scene.image.Image"
+},
+{
   "type":"javafx.scene.image.ImageView"
+},
+{
+  "type":"javafx.scene.image.ImageView"
+},
+{
+  "type":"javafx.scene.input.Clipboard"
 },
 {
   "type":"javafx.scene.input.Clipboard"
@@ -129,10 +263,34 @@
   "type":"javafx.scene.input.Dragboard"
 },
 {
+  "type":"javafx.scene.input.Dragboard"
+},
+{
+  "type":"javafx.scene.layout.Pane"
+},
+{
   "type":"javafx.scene.layout.Pane"
 },
 {
   "type":"javafx.scene.layout.Region"
+},
+{
+  "type":"javafx.scene.layout.Region"
+},
+{
+  "type":"javafx.scene.shape.LineTo"
+},
+{
+  "type":"javafx.scene.shape.MoveTo"
+},
+{
+  "type":"javafx.scene.shape.Path"
+},
+{
+  "type":"javafx.scene.shape.PathElement"
+},
+{
+  "type":"javafx.scene.shape.Rectangle"
 },
 {
   "type":"javafx.scene.shape.Rectangle"
@@ -141,7 +299,16 @@
   "type":"javafx.scene.shape.Shape"
 },
 {
+  "type":"javafx.scene.shape.Shape"
+},
+{
   "type":"javafx.scene.text.Font"
+},
+{
+  "type":"javafx.scene.text.Font"
+},
+{
+  "type":"javafx.scene.text.Text"
 },
 {
   "type":"javafx.scene.text.Text"
@@ -150,7 +317,19 @@
   "type":"javafx.scene.transform.Transform"
 },
 {
+  "type":"javafx.scene.transform.Transform"
+},
+{
+  "type":"javafx.stage.PopupWindow"
+},
+{
   "type":"javafx.stage.Stage"
+},
+{
+  "type":"javafx.stage.Stage"
+},
+{
+  "type":"javafx.stage.Window"
 },
 {
   "type":"javafx.stage.Window"
@@ -160,7 +339,19 @@
   "fields":[{"name":"theUnsafe"}]
 },
 {
+  "type":"sun.misc.Unsafe",
+  "fields":[{"name":"theUnsafe"}]
+},
+{
   "type":"sun.security.provider.MD5",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "type":"sun.security.provider.MD5",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "type":"sun.security.provider.SHA",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
