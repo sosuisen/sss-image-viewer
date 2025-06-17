@@ -105,7 +105,7 @@ public class ImageViewerWindow {
                                         : null)
                         .build())
                 .apply(this::dragWindow)
-                .apply(this::zoomWindow)
+                .onScroll(this::handleScroll)
                 .onKeyPressed(this::handleKeyPressed)
                 .onMouseClicked(event -> {
                     if (event.getClickCount() == 2) {
@@ -177,13 +177,11 @@ public class ImageViewerWindow {
         });
     }
 
-    private void zoomWindow(Scene scene) {
-        scene.setOnScroll(event -> {
-            double delta = event.getDeltaY();
-            double scaleFactor = (delta > 0) ? 1.05 : 0.95;
-            double newScale = currentScale.get() * scaleFactor;
-            currentScale.set(newScale);
-        });
+    private void handleScroll(javafx.scene.input.ScrollEvent event) {
+        double delta = event.getDeltaY();
+        double scaleFactor = (delta > 0) ? 1.05 : 0.95;
+        double newScale = currentScale.get() * scaleFactor;
+        currentScale.set(newScale);
     }
 
     private void handleKeyPressed(javafx.scene.input.KeyEvent event) {
