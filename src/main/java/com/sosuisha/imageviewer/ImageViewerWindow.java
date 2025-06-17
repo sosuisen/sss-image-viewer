@@ -103,57 +103,13 @@ public class ImageViewerWindow {
                                         .maxHeight(STATUS_HEIGHT)
                                         .build())
                                         : null)
-                        .onScroll(event -> {
-                            double delta = event.getDeltaY();
-                            double scaleFactor = (delta > 0) ? 1.05 : 0.95;
-                            double newScale = currentScale.get() * scaleFactor;
-                            currentScale.set(newScale);
-                        })
-                        .onMousePressed(event -> {
-                            xOffset = event.getSceneX();
-                            yOffset = event.getSceneY() + (withFrame ? getTitleBarHeight() : 0);
-                            mousePressed.set(true);
-                        })
-                        .onMouseDragged(event -> {
-                            stage.setX(event.getScreenX() - xOffset);
-                            stage.setY(event.getScreenY() - yOffset);
-                        })
-                        .onMouseReleased(event -> {
-                            mousePressed.set(false);
-                        })
                         .build())
+                .apply(this::dragWindow)
+                .apply(this::zoomWindow)
+                .onKeyPressed(this::handleKeyPressed)
                 .onMouseClicked(event -> {
                     if (event.getClickCount() == 2) {
                         stage.setFullScreen(!stage.isFullScreen());
-                    }
-                })
-                .onKeyPressed(event -> {
-                    var keyCode = event.getCode();
-                    switch (keyCode) {
-                        case ESCAPE -> stage.close();
-                        case F11 -> stage.setFullScreen(!stage.isFullScreen());
-                        case LEFT -> {
-                            getPreviousImage(currentFile.get());
-                        }
-                        case RIGHT -> {
-                            getNextImage(currentFile.get());
-                        }
-                        case ENTER -> {
-                            new ImageViewerWindow(currentFile.get(), !withFrame,
-                                    new Point2D(stage.getX(), stage.getY()),
-                                    currentScale.get());
-                            stage.close();
-                        }
-                        case D -> {
-                            new ImageViewerWindow(currentFile.get(), withFrame,
-                                    new Point2D(stage.getX() + 30, stage.getY() + 30),
-                                    currentScale.get());
-                        }
-                        case SPACE -> {
-                            toggleMarkOnCurrentImage();
-                        }
-                        default -> {
-                        }
                     }
                 })
                 .build();
@@ -171,7 +127,8 @@ public class ImageViewerWindow {
                 }
                 String baseText = markPrefix + (int) orgImageWidth.get() + " x " + (int) orgImageHeight.get();
                 return mousePressed.get()
-                        ? baseText + " | 'Space': mark/unmark, 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize"
+                        ? baseText
+                                + " | 'Space': mark/unmark, 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize"
                         : baseText;
             }, orgImageWidth, orgImageHeight, mousePressed, currentFile, markedImages));
         }
@@ -201,9 +158,62 @@ public class ImageViewerWindow {
                 stage.setY(bounds.getHeight() / 2 - windowSize.getHeight() / 2);
             }
         });
-
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void dragWindow(Scene scene) {
+        scene.setOnMousePressed(event -> {
+            xOffset = event.getSceneX();
+            yOffset = event.getSceneY() + (withFrame ? getTitleBarHeight() : 0);
+            mousePressed.set(true);
+        });
+        scene.setOnMouseDragged(event -> {
+            stage.setX(event.getScreenX() - xOffset);
+            stage.setY(event.getScreenY() - yOffset);
+        });
+        scene.setOnMouseReleased(_ -> {
+            mousePressed.set(false);
+        });
+    }
+
+    private void zoomWindow(Scene scene) {
+        scene.setOnScroll(event -> {
+            double delta = event.getDeltaY();
+            double scaleFactor = (delta > 0) ? 1.05 : 0.95;
+            double newScale = currentScale.get() * scaleFactor;
+            currentScale.set(newScale);
+        });
+    }
+
+    private void handleKeyPressed(javafx.scene.input.KeyEvent event) {
+        var keyCode = event.getCode();
+        switch (keyCode) {
+            case ESCAPE -> stage.close();
+            case F11 -> stage.setFullScreen(!stage.isFullScreen());
+            case LEFT -> {
+                getPreviousImage(currentFile.get());
+            }
+            case RIGHT -> {
+                getNextImage(currentFile.get());
+            }
+            case ENTER -> {
+                new ImageViewerWindow(currentFile.get(), !withFrame,
+                        new Point2D(stage.getX(), stage.getY()),
+                        currentScale.get());
+                stage.close();
+            }
+            case D -> {
+                new ImageViewerWindow(currentFile.get(), withFrame,
+                        new Point2D(stage.getX() + 30, stage.getY() + 30),
+                        currentScale.get());
+            }
+            case SPACE -> {
+                toggleMarkOnCurrentImage();
+            }
+            default -> {
+            }
+        }
     }
 
     private Image getImageFromFile(File file) {
@@ -312,7 +322,7 @@ public class ImageViewerWindow {
         if (current == null || !markedImages.contains(current)) {
             return "";
         }
-        
+
         int position = markedImages.indexOf(current) + 1;
         return position + "/" + markedImages.size();
     }
