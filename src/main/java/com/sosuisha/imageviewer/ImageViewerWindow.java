@@ -66,6 +66,7 @@ public class ImageViewerWindow {
     private DoubleProperty orgImageWidth = new SimpleDoubleProperty(0);
     private DoubleProperty orgImageHeight = new SimpleDoubleProperty(0);
     private DoubleProperty currentScale = new SimpleDoubleProperty(1.0);
+    private DoubleProperty currentFullScreenScale = new SimpleDoubleProperty(1.0);
     private BooleanProperty mousePressed = new SimpleBooleanProperty(false);
     private BooleanProperty slideshowMode = new SimpleBooleanProperty(false);
     private Timeline slideshowTimer = null;
@@ -146,7 +147,7 @@ public class ImageViewerWindow {
                 .onKeyPressed(this::handleKeyPressed)
                 .onMouseClicked(event -> {
                     if (event.getClickCount() == 2) {
-                        stage.setFullScreen(!stage.isFullScreen());
+                        toggleFullScreen();
                     }
                 })
                 .build();
@@ -194,6 +195,10 @@ public class ImageViewerWindow {
         currentScale.addListener((_, _, newValue) -> {
             setWindowSizeFromScale(newValue.doubleValue());
         });
+        
+        currentFullScreenScale.addListener((_, _, newValue) -> {
+            setImageScaleInFullScreen(newValue.doubleValue());
+        });
         if (initialScale != null) {
             currentScale.set(initialScale);
             stage.setX(position.getX());
@@ -225,15 +230,21 @@ public class ImageViewerWindow {
     private void handleScroll(javafx.scene.input.ScrollEvent event) {
         double delta = event.getDeltaY();
         double scaleFactor = (delta > 0) ? 1.05 : 0.95;
-        double newScale = currentScale.get() * scaleFactor;
-        currentScale.set(newScale);
+        
+        if (stage.isFullScreen()) {
+            double newScale = currentFullScreenScale.get() * scaleFactor;
+            currentFullScreenScale.set(newScale);
+        } else {
+            double newScale = currentScale.get() * scaleFactor;
+            currentScale.set(newScale);
+        }
     }
 
     private void handleKeyPressed(javafx.scene.input.KeyEvent event) {
         var keyCode = event.getCode();
         switch (keyCode) {
             case ESCAPE -> stage.close();
-            case F11 -> stage.setFullScreen(!stage.isFullScreen());
+            case F11 -> toggleFullScreen();
             case LEFT -> {
                 if (slideshowMode.get()) {
                     getPreviousMarkedImage();
@@ -303,6 +314,22 @@ public class ImageViewerWindow {
             stage.setWidth(windowSize.getWidth());
             stage.setHeight(windowSize.getHeight());
         });
+    }
+
+    private void setImageScaleInFullScreen(double scale) {
+        // In full-screen mode, scale the image using transforms to keep it centered
+        Platform.runLater(() -> {
+            imageView.setScaleX(scale);
+            imageView.setScaleY(scale);
+            imageView2.setScaleX(scale);
+            imageView2.setScaleY(scale);
+        });
+    }
+
+    private void toggleFullScreen() {
+        boolean wasFullScreen = stage.isFullScreen();
+        stage.setFullScreen(!wasFullScreen);
+        currentFullScreenScale.set(1.0);
     }
 
     private double calcScaleFromMaxDimension(double maxDimension) {
