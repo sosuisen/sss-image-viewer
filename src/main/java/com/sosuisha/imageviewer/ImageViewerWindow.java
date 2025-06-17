@@ -69,6 +69,7 @@ public class ImageViewerWindow {
     private DoubleProperty currentFullScreenScale = new SimpleDoubleProperty(1.0);
     private DoubleProperty imageTranslateX = new SimpleDoubleProperty(0.0);
     private DoubleProperty imageTranslateY = new SimpleDoubleProperty(0.0);
+    private BooleanProperty isFullScreen = new SimpleBooleanProperty(false);
     private BooleanProperty mousePressed = new SimpleBooleanProperty(false);
     private BooleanProperty slideshowMode = new SimpleBooleanProperty(false);
     private Timeline slideshowTimer = null;
@@ -203,21 +204,17 @@ public class ImageViewerWindow {
         });
         
         imageTranslateX.addListener((_, _, newValue) -> {
-            if (stage.isFullScreen()) {
-                Platform.runLater(() -> {
-                    imageView.setTranslateX(newValue.doubleValue());
-                    imageView2.setTranslateX(newValue.doubleValue());
-                });
-            }
+            Platform.runLater(() -> {
+                imageView.setTranslateX(newValue.doubleValue());
+                imageView2.setTranslateX(newValue.doubleValue());
+            });
         });
         
         imageTranslateY.addListener((_, _, newValue) -> {
-            if (stage.isFullScreen()) {
-                Platform.runLater(() -> {
-                    imageView.setTranslateY(newValue.doubleValue());
-                    imageView2.setTranslateY(newValue.doubleValue());
-                });
-            }
+            Platform.runLater(() -> {
+                imageView.setTranslateY(newValue.doubleValue());
+                imageView2.setTranslateY(newValue.doubleValue());
+            });
         });
         if (initialScale != null) {
             currentScale.set(initialScale);
@@ -239,7 +236,7 @@ public class ImageViewerWindow {
             mousePressed.set(true);
         });
         scene.setOnMouseDragged(event -> {
-            if (stage.isFullScreen()) {
+            if (isFullScreen.get()) {
                 double deltaX = event.getSceneX() - xOffset;
                 double deltaY = event.getSceneY() - yOffset;
                 imageTranslateX.set(imageTranslateX.get() + deltaX);
@@ -260,7 +257,7 @@ public class ImageViewerWindow {
         double delta = event.getDeltaY();
         double scaleFactor = (delta > 0) ? 1.05 : 0.95;
         
-        if (stage.isFullScreen()) {
+        if (isFullScreen.get()) {
             double newScale = currentFullScreenScale.get() * scaleFactor;
             currentFullScreenScale.set(newScale);
         } else {
@@ -360,8 +357,9 @@ public class ImageViewerWindow {
     }
 
     private void toggleFullScreen() {
-        boolean wasFullScreen = stage.isFullScreen();
+        boolean wasFullScreen = isFullScreen.get();
         stage.setFullScreen(!wasFullScreen);
+        isFullScreen.set(!wasFullScreen);
         currentFullScreenScale.set(1.0);
         imageTranslateX.set(0.0);
         imageTranslateY.set(0.0);
