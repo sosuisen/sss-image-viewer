@@ -11,6 +11,7 @@ import com.sosuisha.imageviewer.jfxbuilder.ImageViewBuilder;
 import com.sosuisha.imageviewer.jfxbuilder.LabelBuilder;
 import com.sosuisha.imageviewer.jfxbuilder.SceneBuilder;
 import com.sosuisha.imageviewer.jfxbuilder.TextInputDialogBuilder;
+import javafx.scene.layout.StackPane;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -24,6 +25,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.animation.Timeline;
 import javafx.animation.KeyFrame;
+import javafx.animation.FadeTransition;
+import javafx.animation.ParallelTransition;
 import javafx.util.Duration;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
@@ -53,6 +56,7 @@ public class ImageViewerWindow {
 
     private List<File> files = null;
     private ImageView imageView = null;
+    private ImageView imageView2 = null;
     private Map<File, Image> imageCache = new ConcurrentHashMap<>();
     private ObservableList<File> markedImages = FXCollections.observableArrayList();
     private Stage stage = null;
@@ -65,6 +69,7 @@ public class ImageViewerWindow {
     private BooleanProperty slideshowMode = new SimpleBooleanProperty(false);
     private Timeline slideshowTimer = null;
     private double slideshowInterval = 0.0;
+    private ParallelTransition currentAnimation = null;
     private Label statusLabel = null;
 
     public ImageViewerWindow(File file, boolean withFrame) {
@@ -92,7 +97,13 @@ public class ImageViewerWindow {
                 .smooth(true)
                 .build();
 
-        setImage(currentFile.get());
+        imageView2 = ImageViewBuilder.create()
+                .preserveRatio(true)
+                .smooth(true)
+                .opacity(0.0)
+                .build();
+
+        setImage(currentFile.get(), false);
 
         scene = buildScene();
 
@@ -108,10 +119,13 @@ public class ImageViewerWindow {
     }
 
     private Scene buildScene() {
+        var imageStack = new StackPane();
+        imageStack.getChildren().addAll(imageView, imageView2);
+
         return SceneBuilder.create()
                 .root(BorderPaneBuilder.create()
                         .style("-fx-background-color: black")
-                        .center(imageView)
+                        .center(imageStack)
                         .bottom(
                                 withFrame ? (statusLabel = LabelBuilder.create()
                                         .text(imageView.getImage() != null
@@ -141,6 +155,10 @@ public class ImageViewerWindow {
         imageView.fitWidthProperty().bind(scene.widthProperty());
         imageView.fitHeightProperty()
                 .bind(scene.heightProperty().map(h -> h.doubleValue() - (withFrame ? STATUS_HEIGHT : 0)));
+
+        imageView2.fitWidthProperty().bind(scene.widthProperty());
+        imageView2.fitHeightProperty()
+                .bind(scene.heightProperty().map(h -> h.doubleValue() - (withFrame ? STATUS_HEIGHT : 0)));
     }
 
     private void setupTitleBinding() {
@@ -159,7 +177,8 @@ public class ImageViewerWindow {
                     markPrefix = pos.isEmpty() ? "" : "#" + pos + " ";
                 }
                 String slideshowPrefix = slideshowMode.get() ? "[SLIDESHOW] " : "";
-                String baseText = slideshowPrefix + markPrefix + (int) orgImageWidth.get() + " x " + (int) orgImageHeight.get();
+                String baseText = slideshowPrefix + markPrefix + (int) orgImageWidth.get() + " x "
+                        + (int) orgImageHeight.get();
                 return mousePressed.get()
                         ? baseText
                                 + " | 'S': slideshow, 'Space': mark/unmark, 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize"
@@ -293,11 +312,64 @@ public class ImageViewerWindow {
     }
 
     private void setImage(File file) {
+        setImage(file, true);
+    }
+
+    private void setImage(File file, boolean animate) {
+        // Cancel any ongoing animation
+        cancelCurrentAnimation();
+
         currentFile.set(file);
         var image = getImageFromFile(file);
         orgImageWidth.set(image.getWidth());
         orgImageHeight.set(image.getHeight());
-        imageView.setImage(image);
+
+        if (animate && imageView.getImage() != null) {
+            crossFadeToImage(image);
+        } else {
+            imageView.setImage(image);
+        }
+    }
+
+    private void cancelCurrentAnimation() {
+        if (currentAnimation != null && currentAnimation.getStatus() == ParallelTransition.Status.RUNNING) {
+            currentAnimation.stop();
+            // Reset opacity states
+            imageView.setImage(null);
+            imageView.setOpacity(1.0);
+            imageView2.setOpacity(0.0);
+            imageView2.setImage(null);
+            currentAnimation = null;
+        }
+    }
+
+    private void crossFadeToImage(Image newImage) {
+        // Set new image to the second ImageView
+        imageView2.setImage(newImage);
+
+        // Create fade out animation for current image
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(300), imageView);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.5);
+
+        // Create fade in animation for new image
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(300), imageView2);
+        fadeIn.setFromValue(0.5);
+        fadeIn.setToValue(1.0);
+
+        // Create parallel transition
+        currentAnimation = new ParallelTransition(fadeOut, fadeIn);
+
+        currentAnimation.setOnFinished(event -> {
+            // Swap the images and reset opacity
+            imageView.setImage(newImage);
+            imageView.setOpacity(1.0);
+            imageView2.setImage(null);
+            imageView2.setOpacity(0.0);
+            currentAnimation = null;
+        });
+
+        currentAnimation.play();
     }
 
     private void updateFileList(File file) {
@@ -388,13 +460,13 @@ public class ImageViewerWindow {
                 double seconds = Double.parseDouble(result.get());
                 slideshowInterval = seconds;
                 slideshowMode.set(true);
-                
+
                 if (seconds > 0) {
                     slideshowTimer = new Timeline(new KeyFrame(Duration.seconds(seconds), _ -> getNextMarkedImage()));
                     slideshowTimer.setCycleCount(Timeline.INDEFINITE);
                     slideshowTimer.play();
                 }
-                
+
                 if (!markedImages.contains(currentFile.get())) {
                     if (!markedImages.isEmpty()) {
                         setImage(markedImages.get(0));
@@ -419,7 +491,7 @@ public class ImageViewerWindow {
         if (markedImages.isEmpty()) {
             return;
         }
-        
+
         File current = currentFile.get();
         int currentIndex = markedImages.indexOf(current);
         int nextIndex = currentIndex > 0 ? currentIndex - 1 : markedImages.size() - 1;
@@ -431,7 +503,7 @@ public class ImageViewerWindow {
         if (markedImages.isEmpty()) {
             return;
         }
-        
+
         File current = currentFile.get();
         int currentIndex = markedImages.indexOf(current);
         int nextIndex = currentIndex < markedImages.size() - 1 ? currentIndex + 1 : 0;
