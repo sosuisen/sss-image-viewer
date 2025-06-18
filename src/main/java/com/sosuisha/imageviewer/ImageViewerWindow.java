@@ -459,18 +459,22 @@ System.out.println("width: " + orgImageWidth.get() + ", height: " + orgImageHeig
         cancelCurrentAnimation();
 
         currentFile.set(file);
-        var image = getImageFromFile(file);
-        orgImageWidth.set(image.getWidth());
-        orgImageHeight.set(image.getHeight());
+        var originalImage = getImageFromFile(file);
         
         // Restore rotation from memory, or default to 0.0
         double savedRotation = rotationMemory.getOrDefault(file, 0.0);
+        
+        // Create rotated image if needed
+        var displayImage = createRotatedImage(originalImage, savedRotation);
+        orgImageWidth.set(displayImage.getWidth());
+        orgImageHeight.set(displayImage.getHeight());
+        
         imageRotation.set(savedRotation);
 
         if (animate && imageView.getImage() != null && shouldUseCrossFade()) {
-            crossFadeToImage(image);
+            crossFadeToImage(displayImage);
         } else {
-            imageView.setImage(image);
+            imageView.setImage(displayImage);
         }
     }
 
