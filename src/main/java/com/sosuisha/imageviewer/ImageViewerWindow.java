@@ -59,6 +59,7 @@ public class ImageViewerWindow {
     private ImageView imageView = null;
     private ImageView imageView2 = null;
     private Map<File, Image> imageCache = new ConcurrentHashMap<>();
+    private Map<File, Double> rotationMemory = new ConcurrentHashMap<>();
     private ObservableList<File> markedImages = FXCollections.observableArrayList();
     private Stage stage = null;
     private Scene scene = null;
@@ -161,28 +162,13 @@ public class ImageViewerWindow {
     }
 
     private void setupWindowSizeBinding() {
-        // Create bindings that account for rotation
-        var widthBinding = Bindings.createDoubleBinding(() -> {
-            double rotation = Math.abs(imageRotation.get() % 360);
-            if (rotation == 90 || rotation == 270) {
-                return scene.getHeight() - (withFrame ? STATUS_HEIGHT : 0);
-            }
-            return scene.getWidth();
-        }, scene.widthProperty(), scene.heightProperty(), imageRotation);
-        
-        var heightBinding = Bindings.createDoubleBinding(() -> {
-            double rotation = Math.abs(imageRotation.get() % 360);
-            if (rotation == 90 || rotation == 270) {
-                return scene.getWidth();
-            }
-            return scene.getHeight() - (withFrame ? STATUS_HEIGHT : 0);
-        }, scene.widthProperty(), scene.heightProperty(), imageRotation);
+        imageView.fitWidthProperty().bind(scene.widthProperty());
+        imageView.fitHeightProperty()
+                .bind(scene.heightProperty().map(h -> h.doubleValue() - (withFrame ? STATUS_HEIGHT : 0)));
 
-        imageView.fitWidthProperty().bind(widthBinding);
-        imageView.fitHeightProperty().bind(heightBinding);
-
-        imageView2.fitWidthProperty().bind(widthBinding);
-        imageView2.fitHeightProperty().bind(heightBinding);
+        imageView2.fitWidthProperty().bind(scene.widthProperty());
+        imageView2.fitHeightProperty()
+                .bind(scene.heightProperty().map(h -> h.doubleValue() - (withFrame ? STATUS_HEIGHT : 0)));
     }
 
     private void setupTitleBinding() {
@@ -237,42 +223,29 @@ public class ImageViewerWindow {
         });
         
         imageRotation.addListener((_, _, newValue) -> {
-            Platform.runLater(() -> {
-                imageView.setRotate(newValue.doubleValue());
-                imageView2.setRotate(newValue.doubleValue());
-                
-                // Calculate proper positioning when not in full-screen to center the rotated image
-                if (!isFullScreen.get()) {
-                    double rotation = Math.abs(newValue.doubleValue() % 360);
+            // Save rotation to memory for current image
+            if (currentFile.get() != null) {
+                rotationMemory.put(currentFile.get(), newValue.doubleValue());
+            }
+            
+            if (currentFile.get() != null) {
+                    Image originalImage = getImageFromFile(currentFile.get());
+                    Image rotatedImage = createRotatedImage(originalImage, newValue.doubleValue());
+                    imageView.setImage(rotatedImage);
+                    imageView2.setImage(rotatedImage);
                     
-                    if (rotation == 0 || rotation == 180) {
-                        // No rotation or 180° rotation - use default centering
-                        imageTranslateX.set(0.0);
-                        imageTranslateY.set(0.0);
-                    } else {
-                        // 90° or 270° rotation - adjust only the dimension that needs it
-                        boolean isOriginalLandscape = orgImageWidth.get() >= orgImageHeight.get();
-                        
-                        if (isOriginalLandscape) {
-                            // Original is landscape - only adjust X translation
-                            Dimension2D effectiveDimensions = getEffectiveImageDimensions();
-                            double effectiveWidth = effectiveDimensions.getWidth() * currentScale.get();
-                            double windowWidth = scene.getWidth();
-                            double xOffset = (windowWidth - effectiveWidth) / 2;
-                            imageTranslateX.set(-xOffset);
-                            imageTranslateY.set(0.0);
-                        } else {
-                            // Original is portrait - only adjust Y translation
-                            Dimension2D effectiveDimensions = getEffectiveImageDimensions();
-                            double effectiveHeight = effectiveDimensions.getHeight() * currentScale.get();
-                            double windowHeight = scene.getHeight() - (withFrame ? STATUS_HEIGHT : 0);
-                            double yOffset = (windowHeight - effectiveHeight) / 2;
-                            imageTranslateX.set(0.0);
-                            imageTranslateY.set(-yOffset);
-                        }
-                    }
-                    setWindowSizeFromScale(currentScale.get());
+                    // Update dimensions based on rotated image
+                    orgImageWidth.set(rotatedImage.getWidth());
+                    orgImageHeight.set(rotatedImage.getHeight());
+                    
+System.out.println("width: " + orgImageWidth.get() + ", height: " + orgImageHeight.get());
                 }
+            Platform.runLater(() -> {
+                
+                    if (!isFullScreen.get()) {
+                        setWindowSizeFromScale(currentScale.get());
+                    }
+
             });
         });
         if (initialScale != null) {
@@ -311,6 +284,7 @@ public class ImageViewerWindow {
             mousePressed.set(false);
         });
     }
+
 
     private void handleScroll(javafx.scene.input.ScrollEvent event) {
         double delta = event.getDeltaY();
@@ -388,6 +362,32 @@ public class ImageViewerWindow {
         return imageCache.computeIfAbsent(file, f -> new Image(f.toURI().toString()));
     }
 
+    private Image createRotatedImage(Image originalImage, double rotation) {
+        double normalizedRotation = ((rotation % 360) + 360) % 360;
+        
+        if (normalizedRotation == 0) {
+            return originalImage;
+        }
+        
+        // Use ImageView with rotation and take a snapshot
+        ImageView tempImageView = new ImageView(originalImage);
+        
+        // Calculate bounds for rotated image
+        javafx.geometry.Bounds bounds = tempImageView.getBoundsInLocal();
+        tempImageView.getTransforms().add(new javafx.scene.transform.Rotate(normalizedRotation, 
+            originalImage.getWidth()/2, originalImage.getHeight()/2));
+        bounds = tempImageView.getBoundsInParent();
+        
+        // Create canvas with proper size
+        javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(bounds.getWidth(), bounds.getHeight());
+        javafx.scene.layout.StackPane pane = new javafx.scene.layout.StackPane();
+        pane.getChildren().addAll(canvas, tempImageView);
+        
+        javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
+        params.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        return pane.snapshot(params, null);
+    }
+
     private double getFrameBorderWidth() {
         return (stage.getWidth() - scene.getWidth()) / 2;
     }
@@ -397,32 +397,21 @@ public class ImageViewerWindow {
     }
 
     private AspectRatio getAspectRatio() {
-        Dimension2D effectiveDimensions = getEffectiveImageDimensions();
-        return effectiveDimensions.getWidth() >= effectiveDimensions.getHeight() ? AspectRatio.LANDSCAPE : AspectRatio.PORTRAIT;
-    }
-
-    private Dimension2D getEffectiveImageDimensions() {
-        double rotation = Math.abs(imageRotation.get() % 360);
-        if (rotation == 90 || rotation == 270) {
-            return new Dimension2D(orgImageHeight.get(), orgImageWidth.get());
-        }
-        return new Dimension2D(orgImageWidth.get(), orgImageHeight.get());
+        return orgImageWidth.get() >= orgImageHeight.get() ? AspectRatio.LANDSCAPE : AspectRatio.PORTRAIT;
     }
 
     private Dimension2D getWindowSize() {
-        Dimension2D effectiveDimensions = getEffectiveImageDimensions();
-        return new Dimension2D(effectiveDimensions.getWidth() * currentScale.get() + getFrameBorderWidth(),
-                effectiveDimensions.getHeight() * currentScale.get() + getTitleBarHeight()
+        return new Dimension2D(orgImageWidth.get() * currentScale.get() + getFrameBorderWidth(),
+                orgImageHeight.get() * currentScale.get() + getTitleBarHeight()
                         + (withFrame ? STATUS_HEIGHT : 0));
     }
 
     private void setWindowSizeFromScale(double scale) {
         var windowSize = getWindowSize();
-        Dimension2D effectiveDimensions = getEffectiveImageDimensions();
 
         AspectRatio aspectRatio = getAspectRatio();
         aspectRatioSizes.put(aspectRatio,
-                new Dimension2D(effectiveDimensions.getWidth() * scale, effectiveDimensions.getHeight() * scale));
+                new Dimension2D(orgImageWidth.get() * scale, orgImageHeight.get() * scale));
 
         Platform.runLater(() -> {
             stage.setWidth(windowSize.getWidth());
@@ -455,11 +444,10 @@ public class ImageViewerWindow {
     }
 
     private double calcScaleFromMaxDimension(double maxDimension) {
-        Dimension2D effectiveDimensions = getEffectiveImageDimensions();
-        if (effectiveDimensions.getWidth() <= 0 || effectiveDimensions.getHeight() <= 0) {
+        if (orgImageWidth.get() <= 0 || orgImageHeight.get() <= 0) {
             return 1; // Default scale if dimensions are invalid
         }
-        return maxDimension > 0 ? Math.min(maxDimension / effectiveDimensions.getWidth(), maxDimension / effectiveDimensions.getHeight()) : 1;
+        return maxDimension > 0 ? Math.min(maxDimension / orgImageWidth.get(), maxDimension / orgImageHeight.get()) : 1;
     }
 
     private void setImage(File file) {
@@ -474,7 +462,10 @@ public class ImageViewerWindow {
         var image = getImageFromFile(file);
         orgImageWidth.set(image.getWidth());
         orgImageHeight.set(image.getHeight());
-        imageRotation.set(0.0);
+        
+        // Restore rotation from memory, or default to 0.0
+        double savedRotation = rotationMemory.getOrDefault(file, 0.0);
+        imageRotation.set(savedRotation);
 
         if (animate && imageView.getImage() != null && shouldUseCrossFade()) {
             crossFadeToImage(image);
