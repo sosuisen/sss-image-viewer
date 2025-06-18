@@ -3,7 +3,6 @@ package com.sosuisha.imageviewer;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
 
 import com.sosuisha.imageviewer.jfxbuilder.TextInputDialogBuilder;
 
@@ -146,25 +145,7 @@ public class ImageNavigator {
             slideshowTimer = null;
         }
     }
-    
-    public void getPreviousMarkedImage() {
-        if (markedImages.isEmpty()) {
-            return;
-        }
-        
-        // Need current file to determine position
-        // This will be handled differently - see getters below
-    }
-    
-    public void getNextMarkedImage() {
-        if (markedImages.isEmpty()) {
-            return;
-        }
-        
-        // Need current file to determine position
-        // This will be handled differently - see getters below
-    }
-    
+       
     public void navigateToPreviousMarked() {
         if (markedImages.isEmpty()) {
             return;

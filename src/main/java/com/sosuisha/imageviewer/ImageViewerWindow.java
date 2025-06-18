@@ -420,10 +420,6 @@ public class ImageViewerWindow {
         return maxDimension > 0 ? Math.min(maxDimension / orgImageWidth.get(), maxDimension / orgImageHeight.get()) : 1;
     }
 
-    private void setImage(File file) {
-        setImage(file, true);
-    }
-
     private void setImage(File file, boolean animate) {
         // Cancel any ongoing animation
         cancelCurrentAnimation();
