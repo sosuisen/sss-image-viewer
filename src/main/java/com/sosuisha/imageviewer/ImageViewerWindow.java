@@ -1,8 +1,6 @@
 package com.sosuisha.imageviewer;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -10,21 +8,14 @@ import com.sosuisha.imageviewer.jfxbuilder.BorderPaneBuilder;
 import com.sosuisha.imageviewer.jfxbuilder.ImageViewBuilder;
 import com.sosuisha.imageviewer.jfxbuilder.LabelBuilder;
 import com.sosuisha.imageviewer.jfxbuilder.SceneBuilder;
-import com.sosuisha.imageviewer.jfxbuilder.TextInputDialogBuilder;
 import javafx.scene.layout.StackPane;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.animation.Timeline;
-import javafx.animation.KeyFrame;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
 import javafx.util.Duration;
@@ -42,7 +33,6 @@ import javafx.stage.StageStyle;
 public class ImageViewerWindow {
     private static final int STATUS_HEIGHT = 20;
     private static final double MAX_DIMENSION = 800.0; // デフォルトの最大サイズ
-    private static final int CROSSFADE_DURATION_MILLIS = 300;
 
     private enum AspectRatio {
         LANDSCAPE, PORTRAIT
@@ -55,15 +45,13 @@ public class ImageViewerWindow {
 
     private boolean withFrame = true;
 
-    private List<File> files = null;
     private ImageView imageView = null;
     private ImageView imageView2 = null;
     private Map<File, Image> imageCache = new ConcurrentHashMap<>();
     private Map<File, Double> rotationMemory = new ConcurrentHashMap<>();
-    private ObservableList<File> markedImages = FXCollections.observableArrayList();
+    private ImageNavigator imageNavigator;
     private Stage stage = null;
     private Scene scene = null;
-    private ObjectProperty<File> currentFile = new SimpleObjectProperty<>();
     private DoubleProperty orgImageWidth = new SimpleDoubleProperty(0);
     private DoubleProperty orgImageHeight = new SimpleDoubleProperty(0);
     private DoubleProperty currentScale = new SimpleDoubleProperty(1.0);
@@ -71,13 +59,11 @@ public class ImageViewerWindow {
     private DoubleProperty imageTranslateX = new SimpleDoubleProperty(0.0);
     private DoubleProperty imageTranslateY = new SimpleDoubleProperty(0.0);
     private DoubleProperty imageRotation = new SimpleDoubleProperty(0.0);
-    // Manual full-screen state management: stage.isFullScreen() is not correctly captured
+    // Manual full-screen state management: stage.isFullScreen() is not correctly
+    // captured
     // when we need to judge it in ESCAPE key press event handler
     private BooleanProperty isFullScreen = new SimpleBooleanProperty(false);
     private BooleanProperty mousePressed = new SimpleBooleanProperty(false);
-    private BooleanProperty slideshowMode = new SimpleBooleanProperty(false);
-    private Timeline slideshowTimer = null;
-    private double slideshowInterval = 0.0;
     private ParallelTransition currentAnimation = null;
     private Label statusLabel = null;
 
@@ -96,8 +82,11 @@ public class ImageViewerWindow {
      * @param initialScale The initial scale of the image (can be null).
      */
     public ImageViewerWindow(File file, boolean withFrame, Point2D position, Double initialScale) {
-        currentFile.set(file);
         this.withFrame = withFrame;
+        
+        // Initialize image navigator with callback to change images
+        imageNavigator = new ImageNavigator(this::setImage, this::applyAspectRatioSize);
+        imageNavigator.setCurrentFile(file);
 
         stage = new Stage(withFrame ? StageStyle.DECORATED : StageStyle.UNDECORATED);
 
@@ -105,15 +94,14 @@ public class ImageViewerWindow {
                 .preserveRatio(true)
                 .smooth(true)
                 .build();
-        
+
         imageView2 = ImageViewBuilder.create()
                 .preserveRatio(true)
                 .smooth(true)
                 .opacity(0.0)
                 .build();
-        
 
-        setImage(currentFile.get(), false);
+        setImage(file, false);
 
         scene = buildScene();
 
@@ -174,26 +162,25 @@ public class ImageViewerWindow {
     private void setupTitleBinding() {
         stage.titleProperty()
                 .bind(Bindings.createStringBinding(
-                        () -> currentFile.get() != null ? currentFile.get().getName() : "No Image",
-                        currentFile));
+                        () -> imageNavigator.getCurrentFile() != null ? imageNavigator.getCurrentFile().getName() : "No Image"));
     }
 
     private void setupStatusLabelBinding() {
         if (statusLabel != null) {
             statusLabel.textProperty().bind(Bindings.createStringBinding(() -> {
                 String markPrefix = "";
-                if (isCurrentImageMarked()) {
-                    String pos = getMarkedImagePosition();
+                if (imageNavigator.isCurrentImageMarked()) {
+                    String pos = imageNavigator.getMarkedImagePosition();
                     markPrefix = pos.isEmpty() ? "" : "#" + pos + " ";
                 }
-                String slideshowPrefix = slideshowMode.get() ? "[SLIDESHOW] " : "";
+                String slideshowPrefix = imageNavigator.slideshowModeProperty().get() ? "[SLIDESHOW] " : "";
                 String baseText = slideshowPrefix + markPrefix + (int) orgImageWidth.get() + " x "
                         + (int) orgImageHeight.get();
                 return mousePressed.get()
                         ? baseText
                                 + " | 'S': slideshow, 'Space': mark/unmark, 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize"
                         : baseText;
-            }, orgImageWidth, orgImageHeight, mousePressed, currentFile, markedImages, slideshowMode));
+            }, orgImageWidth, orgImageHeight, mousePressed, imageNavigator.getMarkedImages(), imageNavigator.slideshowModeProperty()));
         }
     }
 
@@ -203,48 +190,46 @@ public class ImageViewerWindow {
         currentScale.addListener((_, _, newValue) -> {
             setWindowSizeFromScale(newValue.doubleValue());
         });
-        
+
         currentFullScreenScale.addListener((_, _, newValue) -> {
             setImageScaleInFullScreen(newValue.doubleValue());
         });
-        
+
         imageTranslateX.addListener((_, _, newValue) -> {
             Platform.runLater(() -> {
                 imageView.setTranslateX(newValue.doubleValue());
                 imageView2.setTranslateX(newValue.doubleValue());
             });
         });
-        
+
         imageTranslateY.addListener((_, _, newValue) -> {
             Platform.runLater(() -> {
                 imageView.setTranslateY(newValue.doubleValue());
                 imageView2.setTranslateY(newValue.doubleValue());
             });
         });
-        
+
         imageRotation.addListener((_, _, newValue) -> {
             // Save rotation to memory for current image
-            if (currentFile.get() != null) {
-                rotationMemory.put(currentFile.get(), newValue.doubleValue());
+            if (imageNavigator.getCurrentFile() != null) {
+                rotationMemory.put(imageNavigator.getCurrentFile(), newValue.doubleValue());
             }
-            
-            if (currentFile.get() != null) {
-                    Image originalImage = getImageFromFile(currentFile.get());
-                    Image rotatedImage = createRotatedImage(originalImage, newValue.doubleValue());
-                    imageView.setImage(rotatedImage);
-                    imageView2.setImage(rotatedImage);
-                    
-                    // Update dimensions based on rotated image
-                    orgImageWidth.set(rotatedImage.getWidth());
-                    orgImageHeight.set(rotatedImage.getHeight());
-                    
-System.out.println("width: " + orgImageWidth.get() + ", height: " + orgImageHeight.get());
-                }
+
+            if (imageNavigator.getCurrentFile() != null) {
+                Image originalImage = getImageFromFile(imageNavigator.getCurrentFile());
+                Image rotatedImage = ImageUtil.createRotatedImage(originalImage, newValue.doubleValue());
+                imageView.setImage(rotatedImage);
+                imageView2.setImage(rotatedImage);
+
+                // Update dimensions based on rotated image
+                orgImageWidth.set(rotatedImage.getWidth());
+                orgImageHeight.set(rotatedImage.getHeight());
+            }
             Platform.runLater(() -> {
-                
-                    if (!isFullScreen.get()) {
-                        setWindowSizeFromScale(currentScale.get());
-                    }
+
+                if (!isFullScreen.get()) {
+                    setWindowSizeFromScale(currentScale.get());
+                }
 
             });
         });
@@ -285,11 +270,10 @@ System.out.println("width: " + orgImageWidth.get() + ", height: " + orgImageHeig
         });
     }
 
-
     private void handleScroll(javafx.scene.input.ScrollEvent event) {
         double delta = event.getDeltaY();
         double scaleFactor = (delta > 0) ? 1.05 : 0.95;
-        
+
         if (isFullScreen.get()) {
             double newScale = currentFullScreenScale.get() * scaleFactor;
             currentFullScreenScale.set(newScale);
@@ -315,17 +299,17 @@ System.out.println("width: " + orgImageWidth.get() + ", height: " + orgImageHeig
             }
             case F11 -> toggleFullScreen();
             case LEFT -> {
-                if (slideshowMode.get()) {
-                    getPreviousMarkedImage();
+                if (imageNavigator.slideshowModeProperty().get()) {
+                    imageNavigator.navigateToPreviousMarked();
                 } else {
-                    getPreviousImage(currentFile.get());
+                    imageNavigator.getPreviousImage();
                 }
             }
             case RIGHT -> {
-                if (slideshowMode.get()) {
-                    getNextMarkedImage();
+                if (imageNavigator.slideshowModeProperty().get()) {
+                    imageNavigator.navigateToNextMarked();
                 } else {
-                    getNextImage(currentFile.get());
+                    imageNavigator.getNextImage();
                 }
             }
             case UP -> {
@@ -337,21 +321,32 @@ System.out.println("width: " + orgImageWidth.get() + ", height: " + orgImageHeig
                 imageRotation.set(currentRotation + 90);
             }
             case ENTER -> {
-                new ImageViewerWindow(currentFile.get(), !withFrame,
+                new ImageViewerWindow(imageNavigator.getCurrentFile(), !withFrame,
                         new Point2D(stage.getX(), stage.getY()),
                         currentScale.get());
                 stage.close();
             }
             case D -> {
-                new ImageViewerWindow(currentFile.get(), withFrame,
+                new ImageViewerWindow(imageNavigator.getCurrentFile(), withFrame,
                         new Point2D(stage.getX() + 30, stage.getY() + 30),
                         currentScale.get());
             }
             case SPACE -> {
-                toggleMarkOnCurrentImage();
+                imageNavigator.toggleMarkOnCurrentImage();
             }
             case S -> {
-                toggleSlideshow();
+                imageNavigator.toggleSlideshow();
+                
+                // If slideshow started and current image is not marked, navigate to first marked
+                if (imageNavigator.slideshowModeProperty().get() && 
+                    !imageNavigator.isCurrentImageMarked()) {
+                    File firstMarked = imageNavigator.getFirstMarkedImage();
+                    if (firstMarked != null) {
+                        imageNavigator.setCurrentFile(firstMarked);
+                        setImage(firstMarked, true);
+                        applyAspectRatioSize();
+                    }
+                }
             }
             default -> {
             }
@@ -362,31 +357,6 @@ System.out.println("width: " + orgImageWidth.get() + ", height: " + orgImageHeig
         return imageCache.computeIfAbsent(file, f -> new Image(f.toURI().toString()));
     }
 
-    private Image createRotatedImage(Image originalImage, double rotation) {
-        double normalizedRotation = ((rotation % 360) + 360) % 360;
-        
-        if (normalizedRotation == 0) {
-            return originalImage;
-        }
-        
-        // Use ImageView with rotation and take a snapshot
-        ImageView tempImageView = new ImageView(originalImage);
-        
-        // Calculate bounds for rotated image
-        javafx.geometry.Bounds bounds = tempImageView.getBoundsInLocal();
-        tempImageView.getTransforms().add(new javafx.scene.transform.Rotate(normalizedRotation, 
-            originalImage.getWidth()/2, originalImage.getHeight()/2));
-        bounds = tempImageView.getBoundsInParent();
-        
-        // Create canvas with proper size
-        javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(bounds.getWidth(), bounds.getHeight());
-        javafx.scene.layout.StackPane pane = new javafx.scene.layout.StackPane();
-        pane.getChildren().addAll(canvas, tempImageView);
-        
-        javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
-        params.setFill(javafx.scene.paint.Color.TRANSPARENT);
-        return pane.snapshot(params, null);
-    }
 
     private double getFrameBorderWidth() {
         return (stage.getWidth() - scene.getWidth()) / 2;
@@ -458,33 +428,26 @@ System.out.println("width: " + orgImageWidth.get() + ", height: " + orgImageHeig
         // Cancel any ongoing animation
         cancelCurrentAnimation();
 
-        currentFile.set(file);
+        imageNavigator.setCurrentFile(file);
         var originalImage = getImageFromFile(file);
-        
+
         // Restore rotation from memory, or default to 0.0
         double savedRotation = rotationMemory.getOrDefault(file, 0.0);
-        
+
         // Create rotated image if needed
-        var displayImage = createRotatedImage(originalImage, savedRotation);
+        var displayImage = ImageUtil.createRotatedImage(originalImage, savedRotation);
         orgImageWidth.set(displayImage.getWidth());
         orgImageHeight.set(displayImage.getHeight());
-        
+
         imageRotation.set(savedRotation);
 
-        if (animate && imageView.getImage() != null && shouldUseCrossFade()) {
+        if (animate && imageView.getImage() != null) {
             crossFadeToImage(displayImage);
         } else {
             imageView.setImage(displayImage);
         }
     }
 
-    private boolean shouldUseCrossFade() {
-        // Don't use cross-fade if slideshow is active and interval is too short
-        if (slideshowMode.get() && slideshowInterval > 0 && slideshowInterval * 1000 <= CROSSFADE_DURATION_MILLIS) {
-            return false;
-        }
-        return true;
-    }
 
     private void cancelCurrentAnimation() {
         if (currentAnimation != null && currentAnimation.getStatus() == ParallelTransition.Status.RUNNING) {
@@ -503,12 +466,12 @@ System.out.println("width: " + orgImageWidth.get() + ", height: " + orgImageHeig
         imageView2.setImage(newImage);
 
         // Create fade out animation for current image
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(CROSSFADE_DURATION_MILLIS), imageView);
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(ImageNavigator.CROSSFADE_DURATION_MILLIS), imageView);
         fadeOut.setFromValue(1.0);
         fadeOut.setToValue(0.7);
 
         // Create fade in animation for new image
-        FadeTransition fadeIn = new FadeTransition(Duration.millis(CROSSFADE_DURATION_MILLIS), imageView2);
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(ImageNavigator.CROSSFADE_DURATION_MILLIS), imageView2);
         fadeIn.setFromValue(0.7);
         fadeIn.setToValue(1.0);
 
@@ -527,142 +490,10 @@ System.out.println("width: " + orgImageWidth.get() + ", height: " + orgImageHeig
         currentAnimation.play();
     }
 
-    private void updateFileList(File file) {
-        if (files != null) {
-            return;
-        }
-        var folder = file.getParentFile();
-        if (folder != null && folder.isDirectory()) {
-            var imageFiles = folder.listFiles((_, name) -> ImageUtil.isImageFile(name));
-            Arrays.sort(imageFiles);
-            files = List.of(imageFiles);
-        } else {
-            files = List.of(file);
-        }
-    }
-
     private void applyAspectRatioSize() {
         AspectRatio aspectRatio = getAspectRatio();
         Dimension2D savedSize = aspectRatioSizes.get(aspectRatio);
         double maxDimension = savedSize != null ? Math.max(savedSize.getWidth(), savedSize.getHeight()) : MAX_DIMENSION;
         currentScale.set(calcScaleFromMaxDimension(maxDimension));
-    }
-
-    private void getPreviousImage(File file) {
-        updateFileList(file);
-        var index = files.indexOf(file);
-        var nextIndex = index > 0 ? index - 1 : files.size() - 1;
-        setImage(files.get(nextIndex));
-        applyAspectRatioSize();
-    }
-
-    private void getNextImage(File file) {
-        updateFileList(file);
-        var index = files.indexOf(file);
-        var nextIndex = index < files.size() - 1 ? index + 1 : 0;
-        setImage(files.get(nextIndex));
-        applyAspectRatioSize();
-    }
-
-    private void toggleMarkOnCurrentImage() {
-        File current = currentFile.get();
-        if (current != null) {
-            if (markedImages.contains(current)) {
-                markedImages.remove(current);
-            } else {
-                markedImages.add(current);
-            }
-        }
-    }
-
-    private boolean isCurrentImageMarked() {
-        File current = currentFile.get();
-        return current != null && markedImages.contains(current);
-    }
-
-    private String getMarkedImagePosition() {
-        File current = currentFile.get();
-        if (current == null || !markedImages.contains(current)) {
-            return "";
-        }
-
-        int position = markedImages.indexOf(current) + 1;
-        return position + "/" + markedImages.size();
-    }
-
-    private void toggleSlideshow() {
-        if (slideshowMode.get()) {
-            stopSlideshow();
-        } else {
-            startSlideshow();
-        }
-    }
-
-    private void startSlideshow() {
-        if (markedImages.isEmpty()) {
-            return;
-        }
-
-        var dialog = TextInputDialogBuilder.create(String.valueOf(slideshowInterval))
-                .title("Slideshow Settings")
-                .headerText("Enter slideshow interval")
-                .contentText("Seconds between images (0 = manual navigation):")
-                .build();
-
-        var result = dialog.showAndWait();
-        if (result.isPresent()) {
-            try {
-                double seconds = Double.parseDouble(result.get());
-                slideshowInterval = seconds;
-                slideshowMode.set(true);
-
-                if (seconds > 0) {
-                    slideshowTimer = new Timeline(new KeyFrame(Duration.seconds(seconds), _ -> getNextMarkedImage()));
-                    slideshowTimer.setCycleCount(Timeline.INDEFINITE);
-                    slideshowTimer.play();
-                }
-
-                if (!markedImages.contains(currentFile.get())) {
-                    if (!markedImages.isEmpty()) {
-                        setImage(markedImages.get(0));
-                        applyAspectRatioSize();
-                    }
-                }
-            } catch (NumberFormatException e) {
-                // Invalid input, do nothing
-            }
-        }
-    }
-
-    private void stopSlideshow() {
-        slideshowMode.set(false);
-        if (slideshowTimer != null) {
-            slideshowTimer.stop();
-            slideshowTimer = null;
-        }
-    }
-
-    private void getPreviousMarkedImage() {
-        if (markedImages.isEmpty()) {
-            return;
-        }
-
-        File current = currentFile.get();
-        int currentIndex = markedImages.indexOf(current);
-        int nextIndex = currentIndex > 0 ? currentIndex - 1 : markedImages.size() - 1;
-        setImage(markedImages.get(nextIndex));
-        applyAspectRatioSize();
-    }
-
-    private void getNextMarkedImage() {
-        if (markedImages.isEmpty()) {
-            return;
-        }
-
-        File current = currentFile.get();
-        int currentIndex = markedImages.indexOf(current);
-        int nextIndex = currentIndex < markedImages.size() - 1 ? currentIndex + 1 : 0;
-        setImage(markedImages.get(nextIndex));
-        applyAspectRatioSize();
     }
 }
