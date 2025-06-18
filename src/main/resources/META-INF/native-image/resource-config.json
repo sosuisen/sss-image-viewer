@@ -2699,6 +2699,8 @@
   },{
     "pattern":"\\Qcom\/sun\/javafx\/tk\/quantum\/QuantumMessagesBundle_ja_JP.properties\\E"
   },{
+    "pattern":"java.base:\\Qjava\/lang\/Byte.class\\E"
+  },{
     "pattern":"java.base:\\Qjava\/lang\/Class.class\\E"
   },{
     "pattern":"java.base:\\Qjava\/lang\/Double.class\\E"
@@ -5601,6 +5603,8 @@
   },{
     "pattern":"jdk.graal.compiler:\\Qjdk\/graal\/compiler\/hotspot\/stubs\/IntrinsicStubsGen.class\\E"
   },{
+    "pattern":"jdk.graal.compiler:\\Qjdk\/graal\/compiler\/hotspot\/stubs\/UnwindExceptionToCallerStub.class\\E"
+  },{
     "pattern":"jdk.graal.compiler:\\Qjdk\/graal\/compiler\/nodes\/PiNode.class\\E"
   },{
     "pattern":"jdk.graal.compiler:\\Qjdk\/graal\/compiler\/nodes\/java\/DynamicNewArrayNode.class\\E"
@@ -5622,6 +5626,8 @@
     "pattern":"jdk.graal.compiler:\\Qjdk\/graal\/compiler\/replacements\/SnippetCounter.class\\E"
   },{
     "pattern":"jdk.graal.compiler:\\Qjdk\/graal\/compiler\/replacements\/SnippetIntegerHistogram.class\\E"
+  },{
+    "pattern":"jdk.graal.compiler:\\Qjdk\/graal\/compiler\/replacements\/StringLatin1Snippets.class\\E"
   },{
     "pattern":"jdk.graal.compiler:\\Qjdk\/graal\/compiler\/replacements\/arraycopy\/ArrayCopyCallNode.class\\E"
   },{

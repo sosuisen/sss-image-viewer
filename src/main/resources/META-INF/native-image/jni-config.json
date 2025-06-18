@@ -138,6 +138,14 @@
   "methods":[{"name":"emitWarning","parameterTypes":["java.lang.String"] }]
 },
 {
+  "type":"com.sun.javafx.iio.common.ImageLoaderImpl",
+  "methods":[{"name":"emitWarning","parameterTypes":["java.lang.String"] }]
+},
+{
+  "type":"com.sun.javafx.iio.jpeg.JPEGImageLoader",
+  "methods":[{"name":"setInputAttributes","parameterTypes":["int","int","int","int","int","byte[]"] },{"name":"setOutputAttributes","parameterTypes":["int","int"] },{"name":"updateImageProgress","parameterTypes":["int"] }]
+},
+{
   "type":"com.sun.javafx.iio.jpeg.JPEGImageLoader",
   "methods":[{"name":"setInputAttributes","parameterTypes":["int","int","int","int","int","byte[]"] },{"name":"setOutputAttributes","parameterTypes":["int","int"] },{"name":"updateImageProgress","parameterTypes":["int"] }]
 },
@@ -148,6 +156,10 @@
 {
   "type":"com.sun.prism.impl.PrismSettings",
   "fields":[{"name":"forceGPU"},{"name":"isVsyncEnabled"},{"name":"verbose"}]
+},
+{
+  "type":"java.io.InputStream",
+  "methods":[{"name":"read","parameterTypes":["byte[]","int","int"] },{"name":"skip","parameterTypes":["long"] }]
 },
 {
   "type":"java.io.InputStream",

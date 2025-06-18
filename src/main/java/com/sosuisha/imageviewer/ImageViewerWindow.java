@@ -83,7 +83,7 @@ public class ImageViewerWindow {
      */
     public ImageViewerWindow(File file, boolean withFrame, Point2D position, Double initialScale) {
         this.withFrame = withFrame;
-        
+
         // Initialize image navigator with callback to change images
         imageNavigator = new ImageNavigator(this::setImage, this::applyAspectRatioSize);
         imageNavigator.setCurrentFile(file);
@@ -162,7 +162,8 @@ public class ImageViewerWindow {
     private void setupTitleBinding() {
         stage.titleProperty()
                 .bind(Bindings.createStringBinding(
-                        () -> imageNavigator.getCurrentFile() != null ? imageNavigator.getCurrentFile().getName() : "No Image"));
+                        () -> imageNavigator.getCurrentFile() != null ? imageNavigator.getCurrentFile().getName()
+                                : "No Image"));
     }
 
     private void setupStatusLabelBinding() {
@@ -180,7 +181,8 @@ public class ImageViewerWindow {
                         ? baseText
                                 + " | 'S': slideshow, 'Space': mark/unmark, 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize"
                         : baseText;
-            }, orgImageWidth, orgImageHeight, mousePressed, imageNavigator.getMarkedImages(), imageNavigator.slideshowModeProperty()));
+            }, orgImageWidth, orgImageHeight, mousePressed, imageNavigator.getMarkedImages(),
+                    imageNavigator.slideshowModeProperty()));
         }
     }
 
@@ -226,11 +228,7 @@ public class ImageViewerWindow {
                 orgImageHeight.set(rotatedImage.getHeight());
             }
             Platform.runLater(() -> {
-
-                if (!isFullScreen.get()) {
-                    setWindowSizeFromScale(currentScale.get());
-                }
-
+                setWindowSizeFromScale(currentScale.get());
             });
         });
         if (initialScale != null) {
@@ -336,10 +334,11 @@ public class ImageViewerWindow {
             }
             case S -> {
                 imageNavigator.toggleSlideshow();
-                
-                // If slideshow started and current image is not marked, navigate to first marked
-                if (imageNavigator.slideshowModeProperty().get() && 
-                    !imageNavigator.isCurrentImageMarked()) {
+
+                // If slideshow started and current image is not marked, navigate to first
+                // marked
+                if (imageNavigator.slideshowModeProperty().get() &&
+                        !imageNavigator.isCurrentImageMarked()) {
                     File firstMarked = imageNavigator.getFirstMarkedImage();
                     if (firstMarked != null) {
                         imageNavigator.setCurrentFile(firstMarked);
@@ -356,7 +355,6 @@ public class ImageViewerWindow {
     private Image getImageFromFile(File file) {
         return imageCache.computeIfAbsent(file, f -> new Image(f.toURI().toString()));
     }
-
 
     private double getFrameBorderWidth() {
         return (stage.getWidth() - scene.getWidth()) / 2;
@@ -377,6 +375,9 @@ public class ImageViewerWindow {
     }
 
     private void setWindowSizeFromScale(double scale) {
+        if (isFullScreen.get()) {
+            return;
+        }
         var windowSize = getWindowSize();
 
         AspectRatio aspectRatio = getAspectRatio();
@@ -444,7 +445,6 @@ public class ImageViewerWindow {
         }
     }
 
-
     private void cancelCurrentAnimation() {
         if (currentAnimation != null && currentAnimation.getStatus() == ParallelTransition.Status.RUNNING) {
             currentAnimation.stop();
@@ -462,12 +462,14 @@ public class ImageViewerWindow {
         imageView2.setImage(newImage);
 
         // Create fade out animation for current image
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(ImageNavigator.CROSSFADE_DURATION_MILLIS), imageView);
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(ImageNavigator.CROSSFADE_DURATION_MILLIS),
+                imageView);
         fadeOut.setFromValue(1.0);
         fadeOut.setToValue(0.7);
 
         // Create fade in animation for new image
-        FadeTransition fadeIn = new FadeTransition(Duration.millis(ImageNavigator.CROSSFADE_DURATION_MILLIS), imageView2);
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(ImageNavigator.CROSSFADE_DURATION_MILLIS),
+                imageView2);
         fadeIn.setFromValue(0.7);
         fadeIn.setToValue(1.0);
 

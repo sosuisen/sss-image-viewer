@@ -80,6 +80,10 @@
   "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
 },
 {
+  "type":"com.sun.prism.shader.FillPgram_LinearGradient_PAD_Loader",
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
+},
+{
   "type":"com.sun.prism.shader.FillRoundRect_Color_Loader",
   "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
 },
@@ -124,7 +128,19 @@
   "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
 },
 {
+  "type":"com.sun.prism.shader.Texture_LinearGradient_PAD_Loader",
+  "methods":[{"name":"loadShader","parameterTypes":["com.sun.prism.ps.ShaderFactory","java.lang.String","java.io.InputStream"] }]
+},
+{
   "type":"com.sun.scenario.effect.impl.prism.PrRenderer",
+  "methods":[{"name":"createRenderer","parameterTypes":["com.sun.scenario.effect.FilterContext"] }]
+},
+{
+  "type":"com.sun.scenario.effect.impl.prism.PrRenderer",
+  "methods":[{"name":"createRenderer","parameterTypes":["com.sun.scenario.effect.FilterContext"] }]
+},
+{
+  "type":"com.sun.scenario.effect.impl.prism.ps.PPSRenderer",
   "methods":[{"name":"createRenderer","parameterTypes":["com.sun.scenario.effect.FilterContext"] }]
 },
 {
@@ -238,6 +254,9 @@
   "type":"javafx.scene.Scene"
 },
 {
+  "type":"javafx.scene.canvas.Canvas"
+},
+{
   "type":"javafx.scene.control.Control"
 },
 {
@@ -289,10 +308,22 @@
   "type":"javafx.scene.shape.LineTo"
 },
 {
+  "type":"javafx.scene.shape.LineTo"
+},
+{
+  "type":"javafx.scene.shape.MoveTo"
+},
+{
   "type":"javafx.scene.shape.MoveTo"
 },
 {
   "type":"javafx.scene.shape.Path"
+},
+{
+  "type":"javafx.scene.shape.Path"
+},
+{
+  "type":"javafx.scene.shape.PathElement"
 },
 {
   "type":"javafx.scene.shape.PathElement"
@@ -326,6 +357,9 @@
 },
 {
   "type":"javafx.scene.transform.Transform"
+},
+{
+  "type":"javafx.stage.PopupWindow"
 },
 {
   "type":"javafx.stage.PopupWindow"
