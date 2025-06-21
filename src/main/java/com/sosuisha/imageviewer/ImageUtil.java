@@ -8,13 +8,20 @@ import javafx.scene.image.ImageView;
 
 public class ImageUtil {
     public static String[] availableImageFormats = {
-        "gif",
         "bmp",
+        "gif",
+        "jpg", "jpeg", "jfif",
+        "icns",
+        "ico",
+        "pcx", "dcx",
+        "pnm", "pgm", "pbm", "ppm", "pam",
         "png",
-        "jpeg", "jpg", "jpeg", "jfif",
-        "psd", "psb",
-        "tiff", "tif",
-        "webp"
+        "psd",
+        "hdr",
+        "tif", "tiff",
+        "wbmp",
+        "xbm",
+        "xpm"
     };
     
     public static boolean isImageFile(File file) {
