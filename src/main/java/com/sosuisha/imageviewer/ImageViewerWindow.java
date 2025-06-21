@@ -9,6 +9,8 @@ import com.sosuisha.imageviewer.jfxbuilder.ImageViewBuilder;
 import com.sosuisha.imageviewer.jfxbuilder.LabelBuilder;
 import com.sosuisha.imageviewer.jfxbuilder.SceneBuilder;
 import javafx.scene.layout.StackPane;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -347,6 +349,11 @@ public class ImageViewerWindow {
                     }
                 }
             }
+            case C -> {
+                if (event.isControlDown()) {
+                    copyImageToClipboard();
+                }
+            }
             default -> {
             }
         }
@@ -493,5 +500,14 @@ public class ImageViewerWindow {
         Dimension2D savedSize = aspectRatioSizes.get(aspectRatio);
         double maxDimension = savedSize != null ? Math.max(savedSize.getWidth(), savedSize.getHeight()) : MAX_DIMENSION;
         currentScale.set(calcScaleFromMaxDimension(maxDimension));
+    }
+
+    private void copyImageToClipboard() {
+        if (imageView.getImage() != null) {
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            content.putImage(imageView.getImage());
+            clipboard.setContent(content);
+        }
     }
 }
