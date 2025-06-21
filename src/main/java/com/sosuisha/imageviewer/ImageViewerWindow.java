@@ -56,7 +56,7 @@ public class ImageViewerWindow {
     private Scene scene = null;
     private DoubleProperty orgImageWidth = new SimpleDoubleProperty(0);
     private DoubleProperty orgImageHeight = new SimpleDoubleProperty(0);
-    private DoubleProperty currentScale = new SimpleDoubleProperty(1.0);
+    private DoubleProperty currentScale = new SimpleDoubleProperty(0);
     private DoubleProperty currentFullScreenScale = new SimpleDoubleProperty(1.0);
     private DoubleProperty imageTranslateX = new SimpleDoubleProperty(0.0);
     private DoubleProperty imageTranslateY = new SimpleDoubleProperty(0.0);
