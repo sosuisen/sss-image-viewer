@@ -1,55 +1,31 @@
 # SSS Image Viewer
 
-A JavaFX-based image viewer application built with Java 23 and JavaFX 24.0.1.
+A JavaFX-based quick image viewer.
+
+One of the advantages of JavaFX is that it allows for the creation of fast-starting applications by generating native images. This feature makes it particularly suitable for developing image viewers.
 
 ## Features
 
-- Image viewing with rotation support (with rotation memory)
-- Navigation between images in a directory
-- Slideshow functionality
-- Drag-and-drop support
+- Image viewing with rotation support
+- Easy image scaling using the mouse wheel
+- Simple image layout by dragging the window
+- No frame mode
 - Fullscreen mode
-- File renaming capability
+- Navigate between images in a directory
+- Slideshow feature
 - Copy image to clipboard (Ctrl+C)
 
 ## Supported Image Formats
 
-The application supports the following image formats through JavaFX native image loading:
+If you set this app as the default for opening image files, you can enjoy a fast image viewer.
+
+The app supports the following image formats:
 
 - **GIF** - Full support
 - **PNG** - Full support
 - **JPEG/JPG** - Full support
 - **JFIF** - Full support
 - **BMP** - ⚠️ **Limited support** - Some BMP variants may not display correctly
-
-### BMP Format Limitation
-
-**Important:** JavaFX's native image loading has limited BMP support. Some BMP files may fail to load or display as 0x0 dimensions due to:
-
-- Unsupported BMP compression methods
-- Unusual color depths or bit formats
-- Specific BMP variants not supported by JavaFX
-
-If you encounter BMP files that don't display, this is a known limitation of JavaFX's Image class.
-
-## Build Requirements
-
-- Java 23
-- Maven
-- JavaFX 24.0.1
-
-## Building and Running
-
-```bash
-# Compile
-mvn clean compile
-
-# Run
-mvn javafx:run
-
-# Build JAR
-mvn clean package
-```
 
 ## Usage
 
@@ -72,6 +48,27 @@ mvn clean package
 - **Scroll wheel** - Zoom in/out
 - **Double-click** - Toggle fullscreen
 
+## Build Requirements
+
+- Java 23
+- Maven
+- JavaFX 24.0.1
+
+- GraalVM for Native Image
+- mt.exe for UTF-8 filename
+
+## Building and Running
+
+```bash
+# Compile
+mvn clean compile
+
+# Run
+mvn javafx:run
+
+# Build JAR
+mvn clean package
+```
 ## Native Image Support
 
 The project includes GraalVM native image configuration for creating native executables.
@@ -80,10 +77,6 @@ The project includes GraalVM native image configuration for creating native exec
 
 When building native images on Windows, special handling is required for Unicode file names:
 
-1. Before creating GraalVM Native Image: Run `utf_registry.bat`
-2. After creating the native image: Run `shiftjis_registry.bat`
-3. Embed manifest file into the .exe using `mt.exe` command
-
-## Development
-
-For more details about the project structure and development notes, see `CLAUDE.md`.
+1. Before creating the GraalVM Native Image, run `utf_registry.bat`.
+2. After creating the native image, run `shiftjis_registry.bat` (If your Windows is Japanese Code Page.)
+3. Embed manifest file into the .exe using the `mt.exe` command.
