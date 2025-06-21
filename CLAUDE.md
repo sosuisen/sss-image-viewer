@@ -30,12 +30,6 @@ A JavaFX-based image viewer application built with Java 23 and JavaFX 24.0.1. Th
 - `mvn javafx:run` - Run the application
 - `mvn clean package` - Build JAR package
 
-## Recent Changes (from git history)
-- Fixed fullscreen check when navigating next/prev
-- Refactored navigation and slideshow logic into `ImageNavigator` class
-- Implemented image-based rotation with rotation memory
-- Applied saved rotation when loading images
-
 ## File Structure
 - `src/main/java/com/sosuisha/imageviewer/` - Main source code
 - `src/main/java/com/sosuisha/imageviewer/jfxbuilder/` - JavaFX builder utilities
