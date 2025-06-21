@@ -3,8 +3,6 @@ package com.sosuisha.imageviewer;
 import java.io.File;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.awt.image.BufferedImage;
-import org.apache.commons.imaging.Imaging;
 
 import com.sosuisha.imageviewer.jfxbuilder.BorderPaneBuilder;
 import com.sosuisha.imageviewer.jfxbuilder.ImageViewBuilder;
@@ -13,7 +11,6 @@ import com.sosuisha.imageviewer.jfxbuilder.SceneBuilder;
 import javafx.scene.layout.StackPane;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.embed.swing.SwingFXUtils;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -98,16 +95,12 @@ public class ImageViewerWindow {
         imageView = ImageViewBuilder.create()
                 .preserveRatio(true)
                 .smooth(true)
-                .fitWidth(800) // Temporary size to ensure image displays
-                .fitHeight(600)
                 .build();
 
         imageView2 = ImageViewBuilder.create()
                 .preserveRatio(true)
                 .smooth(true)
                 .opacity(0.0)
-                .fitWidth(800) // Temporary size to ensure image displays
-                .fitHeight(600)
                 .build();
 
         setImage(file, false);
@@ -118,8 +111,8 @@ public class ImageViewerWindow {
         setupTitleBinding();
         setupStatusLabelBinding();
 
-        stage.setWidth(1);
-        stage.setHeight(1);
+        stage.setWidth(100);
+        stage.setHeight(100);
         Platform.runLater(() -> initializeWindowSizeAndPosition(position, initialScale));
         stage.setScene(scene);
         stage.show();
@@ -367,30 +360,7 @@ public class ImageViewerWindow {
     }
 
     private Image getImageFromFile(File file) {
-        return imageCache.computeIfAbsent(file, f -> {
-            Image image = null;
-            try {
-
-                // Try Apache Commons Imaging first for better format support
-                BufferedImage bufferedImage = Imaging.getBufferedImage(f);
-
-                // Remove DPI information by creating a new BufferedImage without metadata
-                BufferedImage cleanImage = new BufferedImage(
-                        bufferedImage.getWidth(),
-                        bufferedImage.getHeight(),
-                        bufferedImage.getType());
-                cleanImage.getGraphics().drawImage(bufferedImage, 0, 0, null);
-                cleanImage.getGraphics().dispose();
-
-                image = SwingFXUtils.toFXImage(cleanImage, null);
-            } catch (Exception e) {
-                // Fall back to JavaFX native image loading
-                System.out.println("Apache Commons Imaging failed for " + f.getName() + ": " +
-                        e.getMessage() + ". Falling back to JavaFX native loading.");
-                image = new Image(f.toURI().toString());
-            }
-            return image;
-        });
+        return imageCache.computeIfAbsent(file, f -> new Image(f.toURI().toString()));
     }
 
     private double getFrameBorderWidth() {
