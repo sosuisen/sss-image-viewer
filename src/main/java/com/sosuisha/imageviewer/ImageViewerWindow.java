@@ -68,6 +68,13 @@ public class ImageViewerWindow {
     private BooleanProperty mousePressed = new SimpleBooleanProperty(false);
     private ParallelTransition currentAnimation = null;
     private Label statusLabel = null;
+    
+    // Store listener references for cleanup
+    private javafx.beans.value.ChangeListener<Number> currentScaleListener;
+    private javafx.beans.value.ChangeListener<Number> currentFullScreenScaleListener;
+    private javafx.beans.value.ChangeListener<Number> imageTranslateXListener;
+    private javafx.beans.value.ChangeListener<Number> imageTranslateYListener;
+    private javafx.beans.value.ChangeListener<Number> imageRotationListener;
 
     public ImageViewerWindow(File file, boolean withFrame) {
         this(file, withFrame, null, null);
@@ -115,6 +122,10 @@ public class ImageViewerWindow {
         stage.setHeight(100);
         Platform.runLater(() -> initializeWindowSizeAndPosition(position, initialScale));
         stage.setScene(scene);
+        
+        // Add cleanup when window is closed
+        stage.setOnCloseRequest(e -> cleanup());
+        
         stage.show();
     }
 
@@ -191,29 +202,34 @@ public class ImageViewerWindow {
     private void initializeWindowSizeAndPosition(Point2D position, Double initialScale) {
         // It seems that GraalVM Native Image does not support subscribe method.
         // currentScale.subscribe(scale -> setWindowSizeFromScale(scale.doubleValue()));
-        currentScale.addListener((_, _, newValue) -> {
+        // Store listeners for cleanup
+        currentScaleListener = (_, _, newValue) -> {
             setWindowSizeFromScale(newValue.doubleValue());
-        });
+        };
+        currentScale.addListener(currentScaleListener);
 
-        currentFullScreenScale.addListener((_, _, newValue) -> {
+        currentFullScreenScaleListener = (_, _, newValue) -> {
             setImageScaleInFullScreen(newValue.doubleValue());
-        });
+        };
+        currentFullScreenScale.addListener(currentFullScreenScaleListener);
 
-        imageTranslateX.addListener((_, _, newValue) -> {
+        imageTranslateXListener = (_, _, newValue) -> {
             Platform.runLater(() -> {
                 imageView.setTranslateX(newValue.doubleValue());
                 imageView2.setTranslateX(newValue.doubleValue());
             });
-        });
+        };
+        imageTranslateX.addListener(imageTranslateXListener);
 
-        imageTranslateY.addListener((_, _, newValue) -> {
+        imageTranslateYListener = (_, _, newValue) -> {
             Platform.runLater(() -> {
                 imageView.setTranslateY(newValue.doubleValue());
                 imageView2.setTranslateY(newValue.doubleValue());
             });
-        });
+        };
+        imageTranslateY.addListener(imageTranslateYListener);
 
-        imageRotation.addListener((_, _, newValue) -> {
+        imageRotationListener = (_, _, newValue) -> {
             // Save rotation to memory for current image
             if (imageNavigator.getCurrentFile() != null) {
                 rotationMemory.put(imageNavigator.getCurrentFile(), newValue.doubleValue());
@@ -232,7 +248,8 @@ public class ImageViewerWindow {
             Platform.runLater(() -> {
                 setWindowSizeFromScale(currentScale.get());
             });
-        });
+        };
+        imageRotation.addListener(imageRotationListener);
         if (initialScale != null) {
             currentScale.set(initialScale);
             stage.setX(position.getX());
@@ -294,6 +311,7 @@ public class ImageViewerWindow {
                     imageTranslateY.set(0.0);
                     imageRotation.set(0.0);
                 } else {
+                    cleanup();
                     stage.close();
                 }
             }
@@ -324,6 +342,7 @@ public class ImageViewerWindow {
                 new ImageViewerWindow(imageNavigator.getCurrentFile(), !withFrame,
                         new Point2D(stage.getX(), stage.getY()),
                         currentScale.get());
+                cleanup();
                 stage.close();
             }
             case D -> {
@@ -509,5 +528,61 @@ public class ImageViewerWindow {
             content.putImage(imageView.getImage());
             clipboard.setContent(content);
         }
+    }
+    
+    /**
+     * Clean up all listeners and bindings to prevent memory leaks
+     */
+    private void cleanup() {
+        // Remove property listeners
+        if (currentScaleListener != null) {
+            currentScale.removeListener(currentScaleListener);
+            currentScaleListener = null;
+        }
+        
+        if (currentFullScreenScaleListener != null) {
+            currentFullScreenScale.removeListener(currentFullScreenScaleListener);
+            currentFullScreenScaleListener = null;
+        }
+        
+        if (imageTranslateXListener != null) {
+            imageTranslateX.removeListener(imageTranslateXListener);
+            imageTranslateXListener = null;
+        }
+        
+        if (imageTranslateYListener != null) {
+            imageTranslateY.removeListener(imageTranslateYListener);
+            imageTranslateYListener = null;
+        }
+        
+        if (imageRotationListener != null) {
+            imageRotation.removeListener(imageRotationListener);
+            imageRotationListener = null;
+        }
+        
+        // Unbind image view properties
+        imageView.fitWidthProperty().unbind();
+        imageView.fitHeightProperty().unbind();
+        imageView2.fitWidthProperty().unbind();
+        imageView2.fitHeightProperty().unbind();
+        
+        // Unbind stage title
+        stage.titleProperty().unbind();
+        
+        // Unbind status label if it exists
+        if (statusLabel != null) {
+            statusLabel.textProperty().unbind();
+        }
+        
+        // Cancel any running animations
+        cancelCurrentAnimation();
+        
+        // Clear image references
+        imageView.setImage(null);
+        imageView2.setImage(null);
+        
+        // Clear caches - but keep them static for other windows
+        // imageCache.clear(); // Don't clear - shared across windows
+        // rotationMemory.clear(); // Don't clear - shared across windows
     }
 }

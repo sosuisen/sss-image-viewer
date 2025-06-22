@@ -102,3 +102,6 @@ When building native images on Windows, file names passed by the OS use the defa
 2. After creating the native image: Run `shiftjis_registry.bat` to return to localized code page. This file is designed for the Japanese Windows codepage, so if you are using Windows in other languages, you need to replace 932 with another number.
 3. Embed manifest file into the .exe using `mt.exe` command
 
+### Property Subscribe Method May Not Be Supported
+GraalVM Native Image may not support JavaFX property `subscribe()` method. This method provides easier subscription/unsubscription management compared to `addListener()`/`removeListener()`, but should be avoided in native image builds to ensure compatibility. Use the traditional listener pattern instead, ensuring proper cleanup by storing listener references for removal to prevent memory leaks.
+
