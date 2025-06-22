@@ -46,7 +46,7 @@ public class ImageNavigator {
         }
         var folder = file.getParentFile();
         if (folder != null && folder.isDirectory()) {
-            var imageFiles = folder.listFiles((dir, name) -> ImageUtil.isImageFile(name));
+            var imageFiles = folder.listFiles((dir, name) -> ImageService.isImageFile(name));
             Arrays.sort(imageFiles);
             files = List.of(imageFiles);
         } else {

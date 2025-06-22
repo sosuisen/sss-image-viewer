@@ -1,27 +1,40 @@
 package com.sosuisha.imageviewer;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javafx.geometry.Dimension2D;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 /**
- * Singleton class to manage persistent app-wide state that should survive
- * across window creation and destruction.
+ * Comprehensive image service that handles both image utilities and persistent caching.
+ * Combines the functionality of ImageUtil and ImageCache into a single service class.
  * 
- * This class only manages truly shared state like caches and user preferences.
- * Per-window state like marked images and slideshow settings remain in ImageNavigator.
+ * This singleton class manages:
+ * - Image format validation
+ * - Image rotation operations
+ * - Persistent app-wide image caching
+ * - User preferences (rotation memory, aspect ratio sizes)
  */
-public class ImageCache {
+public class ImageService {
+    
+    // Image format support
+    public static final String[] AVAILABLE_IMAGE_FORMATS = {
+        "gif",
+        "bmp", 
+        "png",
+        "jpeg", "jpg", "jfif"
+    };
     
     // Aspect ratio enum
     public enum AspectRatio {
         LANDSCAPE, PORTRAIT
     }
     
-    private static ImageCache instance = null;
+    private static ImageService instance = null;
     
     // Persistent caches shared across all windows
     // Use canonical path strings as keys to avoid File object equality issues
@@ -29,16 +42,57 @@ public class ImageCache {
     private final Map<String, Double> rotationMemory = new ConcurrentHashMap<>();
     private final Map<AspectRatio, Dimension2D> aspectRatioSizes = new ConcurrentHashMap<>();
     
-    private ImageCache() {
+    private ImageService() {
         // Private constructor for singleton
     }
     
-    public static synchronized ImageCache getInstance() {
+    public static synchronized ImageService getInstance() {
         if (instance == null) {
-            instance = new ImageCache();
+            instance = new ImageService();
         }
         return instance;
     }
+    
+    // ========== Image Format Utilities ==========
+    
+    public static boolean isImageFile(File file) {
+        return isImageFile(file.getName());
+    }
+
+    public static boolean isImageFile(String fileName) {
+        var lowerCaseName = fileName.toLowerCase();
+        return Arrays.stream(AVAILABLE_IMAGE_FORMATS).anyMatch(lowerCaseName::endsWith);
+    }
+    
+    // ========== Image Rotation Utilities ==========
+    
+    public static Image createRotatedImage(Image originalImage, double rotation) {
+        double normalizedRotation = ((rotation % 360) + 360) % 360;
+        
+        if (normalizedRotation == 0) {
+            return originalImage;
+        }
+        
+        // Use ImageView with rotation and take a snapshot
+        ImageView tempImageView = new ImageView(originalImage);
+        
+        // Calculate bounds for rotated image
+        javafx.geometry.Bounds bounds = tempImageView.getBoundsInLocal();
+        tempImageView.getTransforms().add(new javafx.scene.transform.Rotate(normalizedRotation,
+                originalImage.getWidth() / 2, originalImage.getHeight() / 2));
+        bounds = tempImageView.getBoundsInParent();
+        
+        // Create canvas with proper size
+        javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(bounds.getWidth(), bounds.getHeight());
+        javafx.scene.layout.StackPane pane = new javafx.scene.layout.StackPane();
+        pane.getChildren().addAll(canvas, tempImageView);
+        
+        javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
+        params.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        return pane.snapshot(params, null);
+    }
+    
+    // ========== Cache Management ==========
     
     // Helper method to get canonical path safely
     private String getCanonicalPath(File file) {

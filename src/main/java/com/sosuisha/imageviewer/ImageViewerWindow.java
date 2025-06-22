@@ -222,11 +222,11 @@ public class ImageViewerWindow {
 
         imageRotationListener = (_, _, newValue) -> {
             // Save rotation to memory for current image
-            ImageCache.getInstance().setRotationForFile(imageNavigator.getCurrentFile(), newValue.doubleValue());
+            ImageService.getInstance().setRotationForFile(imageNavigator.getCurrentFile(), newValue.doubleValue());
 
             if (imageNavigator.getCurrentFile() != null) {
-                Image originalImage = ImageCache.getInstance().getImageFromFile(imageNavigator.getCurrentFile());
-                Image rotatedImage = ImageUtil.createRotatedImage(originalImage, newValue.doubleValue());
+                Image originalImage = ImageService.getInstance().getImageFromFile(imageNavigator.getCurrentFile());
+                Image rotatedImage = ImageService.createRotatedImage(originalImage, newValue.doubleValue());
                 imageView.setImage(rotatedImage);
                 imageView2.setImage(rotatedImage);
 
@@ -376,8 +376,8 @@ public class ImageViewerWindow {
         return stage.getHeight() - scene.getHeight() - getFrameBorderWidth();
     }
 
-    private ImageCache.AspectRatio getAspectRatio() {
-        return ImageCache.getInstance().getAspectRatio(orgImageWidth.get(), orgImageHeight.get());
+    private ImageService.AspectRatio getAspectRatio() {
+        return ImageService.getInstance().getAspectRatio(orgImageWidth.get(), orgImageHeight.get());
     }
 
     private Dimension2D getWindowSize() {
@@ -392,8 +392,8 @@ public class ImageViewerWindow {
         }
         var windowSize = getWindowSize();
 
-        ImageCache.AspectRatio aspectRatio = getAspectRatio();
-        ImageCache.getInstance().setAspectRatioSize(aspectRatio,
+        ImageService.AspectRatio aspectRatio = getAspectRatio();
+        ImageService.getInstance().setAspectRatioSize(aspectRatio,
                 new Dimension2D(orgImageWidth.get() * scale, orgImageHeight.get() * scale));
 
         Platform.runLater(() -> {
@@ -438,13 +438,13 @@ public class ImageViewerWindow {
         cancelCurrentAnimation();
 
         imageNavigator.setCurrentFile(file);
-        var originalImage = ImageCache.getInstance().getImageFromFile(file);
+        var originalImage = ImageService.getInstance().getImageFromFile(file);
 
         // Restore rotation from memory
-        double savedRotation = ImageCache.getInstance().getRotationForFile(file);
+        double savedRotation = ImageService.getInstance().getRotationForFile(file);
 
         // Create rotated image if needed
-        var displayImage = ImageUtil.createRotatedImage(originalImage, savedRotation);
+        var displayImage = ImageService.createRotatedImage(originalImage, savedRotation);
         orgImageWidth.set(displayImage.getWidth());
         orgImageHeight.set(displayImage.getHeight());
 
@@ -501,8 +501,8 @@ public class ImageViewerWindow {
     }
 
     private void applyAspectRatioSize() {
-        ImageCache.AspectRatio aspectRatio = getAspectRatio();
-        Dimension2D savedSize = ImageCache.getInstance().getAspectRatioSize(aspectRatio);
+        ImageService.AspectRatio aspectRatio = getAspectRatio();
+        Dimension2D savedSize = ImageService.getInstance().getAspectRatioSize(aspectRatio);
         double maxDimension = savedSize != null ? Math.max(savedSize.getWidth(), savedSize.getHeight()) : MAX_DIMENSION;
         currentScale.set(calcScaleFromMaxDimension(maxDimension));
     }
@@ -567,7 +567,7 @@ public class ImageViewerWindow {
         imageView.setImage(null);
         imageView2.setImage(null);
         
-        // Note: imageCache and rotationMemory are now managed by ImageCache singleton
+        // Note: imageCache and rotationMemory are now managed by ImageService singleton
         // and shared across all windows, so they are not cleared here
     }
 }
