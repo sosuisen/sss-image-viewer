@@ -1,11 +1,12 @@
-package com.sosuisha.imageviewer;
+package com.sosuisha.imageviewer.view;
 
 import java.io.File;
 
-import com.sosuisha.imageviewer.jfxbuilder.BorderPaneBuilder;
-import com.sosuisha.imageviewer.jfxbuilder.ImageViewBuilder;
-import com.sosuisha.imageviewer.jfxbuilder.LabelBuilder;
-import com.sosuisha.imageviewer.jfxbuilder.SceneBuilder;
+import com.sosuisha.imageviewer.ImageService;
+import com.sosuisha.imageviewer.view.jfxbuilder.BorderPaneBuilder;
+import com.sosuisha.imageviewer.view.jfxbuilder.ImageViewBuilder;
+import com.sosuisha.imageviewer.view.jfxbuilder.LabelBuilder;
+import com.sosuisha.imageviewer.view.jfxbuilder.SceneBuilder;
 import javafx.scene.layout.StackPane;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;

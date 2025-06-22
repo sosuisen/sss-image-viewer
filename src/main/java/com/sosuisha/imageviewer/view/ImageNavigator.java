@@ -1,10 +1,11 @@
-package com.sosuisha.imageviewer;
+package com.sosuisha.imageviewer.view;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-import com.sosuisha.imageviewer.jfxbuilder.TextInputDialogBuilder;
+import com.sosuisha.imageviewer.ImageService;
+import com.sosuisha.imageviewer.view.jfxbuilder.TextInputDialogBuilder;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;

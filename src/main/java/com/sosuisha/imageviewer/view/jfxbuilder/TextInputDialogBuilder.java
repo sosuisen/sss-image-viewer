@@ -1,4 +1,4 @@
-package com.sosuisha.imageviewer.jfxbuilder;
+package com.sosuisha.imageviewer.view.jfxbuilder;
 import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.event.*;
