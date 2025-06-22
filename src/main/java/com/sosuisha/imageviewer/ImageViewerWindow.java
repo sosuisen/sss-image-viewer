@@ -1,8 +1,6 @@
 package com.sosuisha.imageviewer;
 
 import java.io.File;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.sosuisha.imageviewer.jfxbuilder.BorderPaneBuilder;
 import com.sosuisha.imageviewer.jfxbuilder.ImageViewBuilder;
@@ -36,11 +34,6 @@ public class ImageViewerWindow {
     private static final int STATUS_HEIGHT = 20;
     private static final double MAX_DIMENSION = 800.0; // デフォルトの最大サイズ
 
-    private enum AspectRatio {
-        LANDSCAPE, PORTRAIT
-    }
-
-    private static final Map<AspectRatio, Dimension2D> aspectRatioSizes = new ConcurrentHashMap<>();
 
     private double xOffset = 0;
     private double yOffset = 0;
@@ -49,8 +42,6 @@ public class ImageViewerWindow {
 
     private ImageView imageView = null;
     private ImageView imageView2 = null;
-    private Map<File, Image> imageCache = new ConcurrentHashMap<>();
-    private Map<File, Double> rotationMemory = new ConcurrentHashMap<>();
     private ImageNavigator imageNavigator;
     private Stage stage = null;
     private Scene scene = null;
@@ -231,12 +222,10 @@ public class ImageViewerWindow {
 
         imageRotationListener = (_, _, newValue) -> {
             // Save rotation to memory for current image
-            if (imageNavigator.getCurrentFile() != null) {
-                rotationMemory.put(imageNavigator.getCurrentFile(), newValue.doubleValue());
-            }
+            ImageCache.getInstance().setRotationForFile(imageNavigator.getCurrentFile(), newValue.doubleValue());
 
             if (imageNavigator.getCurrentFile() != null) {
-                Image originalImage = getImageFromFile(imageNavigator.getCurrentFile());
+                Image originalImage = ImageCache.getInstance().getImageFromFile(imageNavigator.getCurrentFile());
                 Image rotatedImage = ImageUtil.createRotatedImage(originalImage, newValue.doubleValue());
                 imageView.setImage(rotatedImage);
                 imageView2.setImage(rotatedImage);
@@ -378,9 +367,6 @@ public class ImageViewerWindow {
         }
     }
 
-    private Image getImageFromFile(File file) {
-        return imageCache.computeIfAbsent(file, f -> new Image(f.toURI().toString()));
-    }
 
     private double getFrameBorderWidth() {
         return (stage.getWidth() - scene.getWidth()) / 2;
@@ -390,8 +376,8 @@ public class ImageViewerWindow {
         return stage.getHeight() - scene.getHeight() - getFrameBorderWidth();
     }
 
-    private AspectRatio getAspectRatio() {
-        return orgImageWidth.get() >= orgImageHeight.get() ? AspectRatio.LANDSCAPE : AspectRatio.PORTRAIT;
+    private ImageCache.AspectRatio getAspectRatio() {
+        return ImageCache.getInstance().getAspectRatio(orgImageWidth.get(), orgImageHeight.get());
     }
 
     private Dimension2D getWindowSize() {
@@ -406,8 +392,8 @@ public class ImageViewerWindow {
         }
         var windowSize = getWindowSize();
 
-        AspectRatio aspectRatio = getAspectRatio();
-        aspectRatioSizes.put(aspectRatio,
+        ImageCache.AspectRatio aspectRatio = getAspectRatio();
+        ImageCache.getInstance().setAspectRatioSize(aspectRatio,
                 new Dimension2D(orgImageWidth.get() * scale, orgImageHeight.get() * scale));
 
         Platform.runLater(() -> {
@@ -452,10 +438,10 @@ public class ImageViewerWindow {
         cancelCurrentAnimation();
 
         imageNavigator.setCurrentFile(file);
-        var originalImage = getImageFromFile(file);
+        var originalImage = ImageCache.getInstance().getImageFromFile(file);
 
-        // Restore rotation from memory, or default to 0.0
-        double savedRotation = rotationMemory.getOrDefault(file, 0.0);
+        // Restore rotation from memory
+        double savedRotation = ImageCache.getInstance().getRotationForFile(file);
 
         // Create rotated image if needed
         var displayImage = ImageUtil.createRotatedImage(originalImage, savedRotation);
@@ -515,8 +501,8 @@ public class ImageViewerWindow {
     }
 
     private void applyAspectRatioSize() {
-        AspectRatio aspectRatio = getAspectRatio();
-        Dimension2D savedSize = aspectRatioSizes.get(aspectRatio);
+        ImageCache.AspectRatio aspectRatio = getAspectRatio();
+        Dimension2D savedSize = ImageCache.getInstance().getAspectRatioSize(aspectRatio);
         double maxDimension = savedSize != null ? Math.max(savedSize.getWidth(), savedSize.getHeight()) : MAX_DIMENSION;
         currentScale.set(calcScaleFromMaxDimension(maxDimension));
     }
@@ -581,8 +567,7 @@ public class ImageViewerWindow {
         imageView.setImage(null);
         imageView2.setImage(null);
         
-        // Clear caches - but keep them static for other windows
-        // imageCache.clear(); // Don't clear - shared across windows
-        // rotationMemory.clear(); // Don't clear - shared across windows
+        // Note: imageCache and rotationMemory are now managed by ImageCache singleton
+        // and shared across all windows, so they are not cleared here
     }
 }

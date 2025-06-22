@@ -12,6 +12,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.image.Image;
 import javafx.util.Duration;
 
 public class ImageNavigator {
@@ -199,4 +200,5 @@ public class ImageNavigator {
         }
         return true;
     }
+    
 }
