@@ -168,7 +168,7 @@ public class ImageViewerWindow {
         stage.titleProperty()
                 .bind(Bindings.createStringBinding(
                         () -> imageNavigator.getCurrentFile() != null ? imageNavigator.getCurrentFile().getName()
-                                : "No Image"));
+                                : "No Image", imageNavigator.getCurrentFileProperty()));
     }
 
     private void setupStatusLabelBinding() {

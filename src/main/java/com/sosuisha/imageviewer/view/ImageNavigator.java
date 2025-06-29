@@ -10,7 +10,9 @@ import com.sosuisha.imageviewer.view.jfxbuilder.TextInputDialogBuilder;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.util.Duration;
@@ -19,7 +21,7 @@ public class ImageNavigator {
     public static final int CROSSFADE_DURATION_MILLIS = 300;
     
     private List<File> files = null;
-    private File currentFile = null;
+    private ObjectProperty<File> currentFile = new SimpleObjectProperty<>(null);
     private ObservableList<File> markedImages = FXCollections.observableArrayList();
     private BooleanProperty slideshowMode = new SimpleBooleanProperty(false);
     private Timeline slideshowTimer = null;
@@ -34,10 +36,14 @@ public class ImageNavigator {
     }
     
     public void setCurrentFile(File file) {
-        this.currentFile = file;
+        this.currentFile.set(file);
     }
     
     public File getCurrentFile() {
+        return currentFile.get();
+    }
+    
+    public ObjectProperty<File> getCurrentFileProperty() {
         return currentFile;
     }
     
@@ -56,47 +62,47 @@ public class ImageNavigator {
     }
     
     public void getPreviousImage() {
-        updateFileList(currentFile);
-        var index = files.indexOf(currentFile);
+        updateFileList(currentFile.get());
+        var index = files.indexOf(currentFile.get());
         var nextIndex = index > 0 ? index - 1 : files.size() - 1;
         File nextFile = files.get(nextIndex);
-        currentFile = nextFile;
+        currentFile.set(nextFile);
         boolean animate = shouldUseCrossFade();
         onImageChange.accept(nextFile, animate);
         onApplyAspectRatioSize.run();
     }
     
     public void getNextImage() {
-        updateFileList(currentFile);
-        var index = files.indexOf(currentFile);
+        updateFileList(currentFile.get());
+        var index = files.indexOf(currentFile.get());
         var nextIndex = index < files.size() - 1 ? index + 1 : 0;
         File nextFile = files.get(nextIndex);
-        currentFile = nextFile;
+        currentFile.set(nextFile);
         boolean animate = shouldUseCrossFade();
         onImageChange.accept(nextFile, animate);
         onApplyAspectRatioSize.run();
     }
     
     public void toggleMarkOnCurrentImage() {
-        if (currentFile != null) {
-            if (markedImages.contains(currentFile)) {
-                markedImages.remove(currentFile);
+        if (currentFile.get() != null) {
+            if (markedImages.contains(currentFile.get())) {
+                markedImages.remove(currentFile.get());
             } else {
-                markedImages.add(currentFile);
+                markedImages.add(currentFile.get());
             }
         }
     }
     
     public boolean isCurrentImageMarked() {
-        return currentFile != null && markedImages.contains(currentFile);
+        return currentFile.get() != null && markedImages.contains(currentFile.get());
     }
     
     public String getMarkedImagePosition() {
-        if (currentFile == null || !markedImages.contains(currentFile)) {
+        if (currentFile.get() == null || !markedImages.contains(currentFile.get())) {
             return "";
         }
         
-        int position = markedImages.indexOf(currentFile) + 1;
+        int position = markedImages.indexOf(currentFile.get()) + 1;
         return position + "/" + markedImages.size();
     }
     
@@ -152,10 +158,10 @@ public class ImageNavigator {
             return;
         }
         
-        int currentIndex = markedImages.indexOf(currentFile);
+        int currentIndex = markedImages.indexOf(currentFile.get());
         int nextIndex = currentIndex > 0 ? currentIndex - 1 : markedImages.size() - 1;
         File nextFile = markedImages.get(nextIndex);
-        currentFile = nextFile;
+        currentFile.set(nextFile);
         boolean animate = shouldUseCrossFade();
         onImageChange.accept(nextFile, animate);
         onApplyAspectRatioSize.run();
@@ -166,10 +172,10 @@ public class ImageNavigator {
             return;
         }
         
-        int currentIndex = markedImages.indexOf(currentFile);
+        int currentIndex = markedImages.indexOf(currentFile.get());
         int nextIndex = currentIndex < markedImages.size() - 1 ? currentIndex + 1 : 0;
         File nextFile = markedImages.get(nextIndex);
-        currentFile = nextFile;
+        currentFile.set(nextFile);
         boolean animate = shouldUseCrossFade();
         onImageChange.accept(nextFile, animate);
         onApplyAspectRatioSize.run();
