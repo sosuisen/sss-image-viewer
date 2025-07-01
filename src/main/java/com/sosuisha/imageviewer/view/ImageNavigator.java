@@ -47,13 +47,13 @@ public class ImageNavigator {
     public File getCurrentFile() {
         return currentFile.get();
     }
-
-    public BooleanProperty getCanStartSlideShow() {
-        return canStartSlideShow;
-    }
     
     public ObjectProperty<File> getCurrentFileProperty() {
         return currentFile;
+    }
+
+    public boolean getCanStartSlideShow() {
+        return canStartSlideShow.get();
     }
     
     public void updateFileList(File file) {

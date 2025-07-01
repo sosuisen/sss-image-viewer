@@ -183,7 +183,7 @@ public class ImageViewerWindow {
                 String slideshowPrefix = imageNavigator.slideshowModeProperty().get() ? "[SLIDESHOW] " : "";
                 String baseText = slideshowPrefix + markPrefix + (int) orgImageWidth.get() + " x "
                         + (int) orgImageHeight.get();
-                String canStartSlideShow = imageNavigator.getCanStartSlideShow().get() ? "'S': slideshow, " : "";
+                String canStartSlideShow = imageNavigator.getCanStartSlideShow() ? "'S': slideshow, " : "";
 
                 if (mousePressed.get() || helpMode.get()) {
                     return baseText + " | " + canStartSlideShow + "'Space': mark/unmark, 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize";
@@ -361,7 +361,6 @@ public class ImageViewerWindow {
                         !imageNavigator.isCurrentImageMarked().get()) {
                     File firstMarked = imageNavigator.getFirstMarkedImage();
                     if (firstMarked != null) {
-                        imageNavigator.setCurrentFile(firstMarked);
                         setImage(firstMarked, true);
                         applyAspectRatioSize();
                     }
