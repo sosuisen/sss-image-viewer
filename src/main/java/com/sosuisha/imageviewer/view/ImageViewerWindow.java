@@ -58,6 +58,7 @@ public class ImageViewerWindow {
     // when we need to judge it in ESCAPE key press event handler
     private BooleanProperty isFullScreen = new SimpleBooleanProperty(false);
     private BooleanProperty mousePressed = new SimpleBooleanProperty(false);
+    private BooleanProperty helpMode = new SimpleBooleanProperty(false);
     private ParallelTransition currentAnimation = null;
     private Label statusLabel = null;
     
@@ -175,19 +176,24 @@ public class ImageViewerWindow {
         if (statusLabel != null) {
             statusLabel.textProperty().bind(Bindings.createStringBinding(() -> {
                 String markPrefix = "";
-                if (imageNavigator.isCurrentImageMarked()) {
+                if (imageNavigator.isCurrentImageMarked().get()) {
                     String pos = imageNavigator.getMarkedImagePosition();
                     markPrefix = pos.isEmpty() ? "" : "#" + pos + " ";
                 }
                 String slideshowPrefix = imageNavigator.slideshowModeProperty().get() ? "[SLIDESHOW] " : "";
                 String baseText = slideshowPrefix + markPrefix + (int) orgImageWidth.get() + " x "
                         + (int) orgImageHeight.get();
-                return mousePressed.get()
-                        ? baseText
-                                + " | 'S': slideshow, 'Space': mark/unmark, 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize"
-                        : baseText;
+                String canStartSlideShow = imageNavigator.getCanStartSlideShow().get() ? "'S': slideshow, " : "";
+
+                if (mousePressed.get() || helpMode.get()) {
+                    return baseText + " | " + canStartSlideShow + "'Space': mark/unmark, 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize";
+                }
+                else if (imageNavigator.slideshowModeProperty().get()) {
+                    return baseText + " | 'S': end";
+                }
+                return baseText + " | 'H': help"; 
             }, orgImageWidth, orgImageHeight, mousePressed, imageNavigator.getMarkedImages(),
-                    imageNavigator.slideshowModeProperty()));
+                    imageNavigator.slideshowModeProperty(), imageNavigator.isCurrentImageMarked(), helpMode));
         }
     }
 
@@ -340,6 +346,9 @@ public class ImageViewerWindow {
                         new Point2D(stage.getX() + 30, stage.getY() + 30),
                         currentScale.get());
             }
+            case H -> {
+                helpMode.set(!helpMode.get());
+            }
             case SPACE -> {
                 imageNavigator.toggleMarkOnCurrentImage();
             }
@@ -349,7 +358,7 @@ public class ImageViewerWindow {
                 // If slideshow started and current image is not marked, navigate to first
                 // marked
                 if (imageNavigator.slideshowModeProperty().get() &&
-                        !imageNavigator.isCurrentImageMarked()) {
+                        !imageNavigator.isCurrentImageMarked().get()) {
                     File firstMarked = imageNavigator.getFirstMarkedImage();
                     if (firstMarked != null) {
                         imageNavigator.setCurrentFile(firstMarked);

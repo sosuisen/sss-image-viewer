@@ -9,6 +9,7 @@ import com.sosuisha.imageviewer.view.jfxbuilder.TextInputDialogBuilder;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -24,6 +25,8 @@ public class ImageNavigator {
     private ObjectProperty<File> currentFile = new SimpleObjectProperty<>(null);
     private ObservableList<File> markedImages = FXCollections.observableArrayList();
     private BooleanProperty slideshowMode = new SimpleBooleanProperty(false);
+    private BooleanProperty isCurrentImageMarked = new SimpleBooleanProperty(false);
+    private BooleanProperty canStartSlideShow = new SimpleBooleanProperty(false);
     private Timeline slideshowTimer = null;
     private double slideshowInterval = 0.0;
     
@@ -33,6 +36,8 @@ public class ImageNavigator {
     public ImageNavigator(java.util.function.BiConsumer<File, Boolean> onImageChange, Runnable onApplyAspectRatioSize) {
         this.onImageChange = onImageChange;
         this.onApplyAspectRatioSize = onApplyAspectRatioSize;
+        isCurrentImageMarked.bind(Bindings.createBooleanBinding(() -> markedImages.contains(currentFile.get()), currentFile, markedImages));
+        canStartSlideShow.bind(Bindings.createBooleanBinding(() -> !markedImages.isEmpty(), markedImages));
     }
     
     public void setCurrentFile(File file) {
@@ -41,6 +46,10 @@ public class ImageNavigator {
     
     public File getCurrentFile() {
         return currentFile.get();
+    }
+
+    public BooleanProperty getCanStartSlideShow() {
+        return canStartSlideShow;
     }
     
     public ObjectProperty<File> getCurrentFileProperty() {
@@ -93,8 +102,8 @@ public class ImageNavigator {
         }
     }
     
-    public boolean isCurrentImageMarked() {
-        return currentFile.get() != null && markedImages.contains(currentFile.get());
+    public BooleanProperty isCurrentImageMarked() {
+        return isCurrentImageMarked;
     }
     
     public String getMarkedImagePosition() {
