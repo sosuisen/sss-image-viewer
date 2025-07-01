@@ -175,15 +175,15 @@ public class ImageViewerWindow {
     private void setupStatusLabelBinding() {
         if (statusLabel != null) {
             statusLabel.textProperty().bind(Bindings.createStringBinding(() -> {
-                String markPrefix = "";
+                var markPrefix = "";
                 if (imageNavigator.isCurrentImageMarked().get()) {
-                    String pos = imageNavigator.getMarkedImagePosition();
+                    var pos = imageNavigator.getMarkedImagePosition();
                     markPrefix = pos.isEmpty() ? "" : "#" + pos + " ";
                 }
-                String slideshowPrefix = imageNavigator.slideshowModeProperty().get() ? "[SLIDESHOW] " : "";
-                String baseText = slideshowPrefix + markPrefix + (int) orgImageWidth.get() + " x "
+                var slideshowPrefix = imageNavigator.slideshowModeProperty().get() ? "[SLIDESHOW] " : "";
+                var baseText = slideshowPrefix + markPrefix + (int) orgImageWidth.get() + " x "
                         + (int) orgImageHeight.get();
-                String canStartSlideShow = imageNavigator.getCanStartSlideShow() ? "'S': slideshow, " : "";
+                var canStartSlideShow = imageNavigator.getCanStartSlideShow() ? "'S': slideshow, " : "";
 
                 if (mousePressed.get() || helpMode.get()) {
                     return baseText + " | " + canStartSlideShow + "'Space': mark/unmark, 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize";
