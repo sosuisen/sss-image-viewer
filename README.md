@@ -77,7 +77,7 @@ The project includes GraalVM native image configuration for creating native exec
 
 When building native images on Windows, special handling is required for Unicode file names:
 
-1. Before creating the GraalVM Native Image, run `utf_registry.bat`.
+1. Before creating the GraalVM Native Image, run `utf_registry.bat` in an administrator command prompt.
 2. After creating the native image, run `shiftjis_registry.bat` (if your Windows is Japanese Code Page).
 3. Embed the manifest file into the .exe using the `mt.exe` command.
 
