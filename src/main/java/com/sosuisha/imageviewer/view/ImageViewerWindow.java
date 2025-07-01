@@ -16,7 +16,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
 import javafx.util.Duration;
@@ -46,13 +45,18 @@ public class ImageViewerWindow {
     private ImageNavigator imageNavigator;
     private Stage stage = null;
     private Scene scene = null;
-    private DoubleProperty orgImageWidth = new SimpleDoubleProperty(0);
-    private DoubleProperty orgImageHeight = new SimpleDoubleProperty(0);
-    private DoubleProperty currentScale = new SimpleDoubleProperty(0);
-    private DoubleProperty currentFullScreenScale = new SimpleDoubleProperty(1.0);
-    private DoubleProperty imageTranslateX = new SimpleDoubleProperty(0.0);
-    private DoubleProperty imageTranslateY = new SimpleDoubleProperty(0.0);
-    private DoubleProperty imageRotation = new SimpleDoubleProperty(0.0);
+    
+    // They need to fire change events even when the same value is set
+    // because the image will be changed
+    // and the UI needs to update even if the underlying value hasn't changed.
+    private DoubleProperty orgImageWidth = new AlwaysFireDoubleProperty(0);
+    private DoubleProperty orgImageHeight = new AlwaysFireDoubleProperty(0);
+    private DoubleProperty currentScale = new AlwaysFireDoubleProperty(0);
+    private DoubleProperty currentFullScreenScale = new AlwaysFireDoubleProperty(1.0);
+    private DoubleProperty imageTranslateX = new AlwaysFireDoubleProperty(0.0);
+    private DoubleProperty imageTranslateY = new AlwaysFireDoubleProperty(0.0);
+    private DoubleProperty imageRotation = new AlwaysFireDoubleProperty(0.0);
+
     // Manual full-screen state management: stage.isFullScreen() is not correctly
     // captured
     // when we need to judge it in ESCAPE key press event handler
