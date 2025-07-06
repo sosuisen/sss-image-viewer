@@ -59,6 +59,11 @@
         <version>3.4.2</version>
         <configuration>
           <outputDirectory>${project.basedir}/target/package</outputDirectory>
+          <archive>
+            <manifest>
+              <mainClass>${main.class}</mainClass>
+            </manifest>
+          </archive>
         </configuration>
       </plugin>
       <plugin>
@@ -76,6 +81,7 @@
           <destination>target/jpackage</destination>
           <javaOptions>
             <option>-Dfile.encoding=UTF-8</option>
+            <option>-XX:SharedArchiveFile=app.jsa</option>
           </javaOptions>
           <type>${jpackage.type}</type>
           <!-- Options for MSI -->
