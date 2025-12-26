@@ -375,6 +375,14 @@ public class ImageViewerWindow {
                     copyImageToClipboard();
                 }
             }
+            case DELETE -> {
+                boolean hasMoreImages = imageNavigator.deleteCurrentFile();
+                if (!hasMoreImages) {
+                    // No more images, close the window
+                    cleanup();
+                    stage.close();
+                }
+            }
             default -> {
             }
         }

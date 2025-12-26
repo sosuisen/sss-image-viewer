@@ -1,6 +1,7 @@
 package com.sosuisha.imageviewer.view;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -64,12 +65,62 @@ public class ImageNavigator {
         if (folder != null && folder.isDirectory()) {
             var imageFiles = folder.listFiles((dir, name) -> ImageService.isImageFile(name));
             Arrays.sort(imageFiles);
-            files = List.of(imageFiles);
+            files = new ArrayList<>(Arrays.asList(imageFiles));
         } else {
-            files = List.of(file);
+            files = new ArrayList<>(Arrays.asList(file));
         }
     }
-    
+
+    /**
+     * Deletes the current image file from the file system and navigates to the next available image.
+     * @return true if there are still images available after deletion, false if no images remain
+     */
+    public boolean deleteCurrentFile() {
+        if (currentFile.get() == null || files == null || files.isEmpty()) {
+            return false;
+        }
+
+        File fileToDelete = currentFile.get();
+        int currentIndex = files.indexOf(fileToDelete);
+
+        if (currentIndex == -1) {
+            return false;
+        }
+
+        // Try to delete the actual file first
+        boolean deleted = fileToDelete.delete();
+
+        if (!deleted) {
+            // Deletion failed, return true since files still exist
+            return true;
+        }
+
+        // Deletion succeeded, now update the internal state
+        // Remove from marked images if it's marked
+        markedImages.remove(fileToDelete);
+
+        // Remove from the file list
+        files.remove(currentIndex);
+
+        // Determine the next file to show
+        if (files.isEmpty()) {
+            // No more files
+            currentFile.set(null);
+            return false;
+        }
+
+        // Navigate to the next file (prefer same index, or previous if at end)
+        int nextIndex = currentIndex < files.size() ? currentIndex : currentIndex - 1;
+        File nextFile = files.get(nextIndex);
+
+        currentFile.set(nextFile);
+        boolean animate = shouldUseCrossFade();
+        onImageChange.accept(nextFile, animate);
+        onApplyAspectRatioSize.run();
+
+        return true;
+    }
+
     public void getPreviousImage() {
         updateFileList(currentFile.get());
         var index = files.indexOf(currentFile.get());
