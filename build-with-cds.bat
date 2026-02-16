@@ -2,10 +2,11 @@
 
 cd target/package
 
+echo Generating CDS archive...
 ..\image\bin\java -Xshare:dump
 
-echo Open image
-..\image\bin\java -XX:ArchiveClassesAtExit=app.jsa -Dcds.training.mode=true -jar sss-image-viewer-1.0.5.jar "..\..\images\sample.png"
+echo Generating CDS class list...
+..\image\bin\java --enable-native-access=ALL-UNNAMED -XX:ArchiveClassesAtExit=app.jsa -jar sss-image-viewer-1.0.6.jar "..\..\images\sample.png"
 
 if exist app.jsa (
     echo.

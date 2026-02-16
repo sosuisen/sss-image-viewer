@@ -1,11 +1,11 @@
 @echo off
 cd target/package
 
-echo Generating CDS class list...
-..\image\bin\java -XX:DumpLoadedClassList=app.classlist -Dcds.training.mode=true -jar sss-image-viewer-1.0.5.jar
+echo Generating CDS archive...
+..\image\bin\java -Xshare:dump
 
-echo Creating CDS archive...
-..\image\bin\java -Xshare:dump -XX:SharedClassListFile=app.classlist -XX:SharedArchiveFile=app.jsa
+echo Generating CDS class list...
+..\image\bin\java --enable-native-access=ALL-UNNAMED -XX:ArchiveClassesAtExit=app.jsa -jar sss-image-viewer-1.0.6.jar "..\..\images\sample.png"
 
 echo CDS archive created: app.jsa
 dir app.jsa

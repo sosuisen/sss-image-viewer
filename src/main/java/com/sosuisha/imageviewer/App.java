@@ -14,6 +14,14 @@ import java.util.function.Consumer;
 public class App extends Application {
     @Override
     public void start(Stage stage) {
+        // for benchmark: Automatically exit after opening the file to measure startup
+        // time without user interaction
+        if ("true".equals(System.getProperty("auto.exit"))) {
+            Platform.runLater(() -> {
+                Platform.exit();
+            });
+        }
+
         var params = getParameters();
         var filePath = params.getUnnamed().isEmpty() ? null : params.getUnnamed().get(0);
         openFile(stage, filePath, false);
