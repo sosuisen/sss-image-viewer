@@ -386,6 +386,11 @@ public class ImageViewerWindow {
                     copyImageToClipboard();
                 }
             }
+            case Q -> {
+                if (event.isControlDown()) {
+                    Platform.exit();
+                }
+            }
             case DELETE -> {
                 boolean hasMoreImages = imageNavigator.deleteCurrentFile();
                 if (!hasMoreImages) {

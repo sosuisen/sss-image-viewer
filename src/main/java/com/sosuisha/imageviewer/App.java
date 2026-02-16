@@ -12,12 +12,26 @@ import java.io.File;
 import java.util.function.Consumer;
 
 public class App extends Application {
+    private final SingleInstanceService singleInstanceService = new SingleInstanceService();
+    private final TrayIconService trayIconService = new TrayIconService();
+
     @Override
     public void start(Stage stage) {
+        Platform.setImplicitExit(false);
+
         // for benchmark: Automatically exit after opening the file to measure startup
         // time without user interaction
         if ("true".equals(System.getProperty("auto.exit"))) {
             Platform.exit();
+        }
+
+        trayIconService.install();
+
+        try {
+            singleInstanceService.startServer(
+                    filePath -> Platform.runLater(() -> handleIncomingFile(filePath)));
+        } catch (Exception e) {
+            System.err.println("Failed to start single-instance server: " + e.getMessage());
         }
 
         var params = getParameters();
@@ -25,9 +39,32 @@ public class App extends Application {
         openFile(stage, filePath, false);
     }
 
+    @Override
+    public void stop() {
+        trayIconService.uninstall();
+        singleInstanceService.stopServer();
+    }
+
     public static void main(String[] args) throws Throwable {
         args = UnicodeArgs.resolveArgs(args);
+
+        String filePath = args.length > 0 ? args[0] : null;
+        if (SingleInstanceService.trySendToExisting(filePath)) {
+            System.exit(0);
+        }
+
         Application.launch(App.class, args);
+    }
+
+    private void handleIncomingFile(String filePath) {
+        if (filePath != null) {
+            var file = new File(filePath);
+            if (file.exists() && file.isFile()) {
+                new ImageViewerWindow(file, true);
+            }
+        } else {
+            new DragAndDropWindow(new Stage());
+        }
     }
 
     private void openFile(Stage stage, String filePath, boolean fileNameWillBeChanged) {

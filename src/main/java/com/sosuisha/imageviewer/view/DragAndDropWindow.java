@@ -1,7 +1,9 @@
 package com.sosuisha.imageviewer.view;
 
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.stage.Stage;
 
@@ -35,6 +37,13 @@ public class DragAndDropWindow {
                 .build();
 
         var scene = new Scene(root, 600, 400);
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.Q && event.isControlDown()) {
+                Platform.exit();
+            } else if (event.getCode() == KeyCode.ESCAPE) {
+                stage.close();
+            }
+        });
         stage.setScene(scene);
         stage.setTitle("Drag & drop an image file here.");
         stage.show();
