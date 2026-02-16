@@ -34,7 +34,6 @@ public class ImageViewerWindow {
     private static final int STATUS_HEIGHT = 20;
     private static final double MAX_DIMENSION = 800.0; // デフォルトの最大サイズ
 
-
     private double xOffset = 0;
     private double yOffset = 0;
 
@@ -45,7 +44,7 @@ public class ImageViewerWindow {
     private ImageNavigator imageNavigator;
     private Stage stage = null;
     private Scene scene = null;
-    
+
     // They need to fire change events even when the same value is set
     // because the image will be changed
     // and the UI needs to update even if the underlying value hasn't changed.
@@ -65,7 +64,11 @@ public class ImageViewerWindow {
     private BooleanProperty helpMode = new SimpleBooleanProperty(false);
     private ParallelTransition currentAnimation = null;
     private Label statusLabel = null;
-    
+    private volatile File pendingImageFile = null;
+    private boolean windowPositionInitialized = false;
+    private Point2D initialPosition;
+    private Double initialScaleValue;
+
     // Store listener references for cleanup
     private javafx.beans.value.ChangeListener<Number> currentScaleListener;
     private javafx.beans.value.ChangeListener<Number> currentFullScreenScaleListener;
@@ -89,9 +92,11 @@ public class ImageViewerWindow {
      */
     public ImageViewerWindow(File file, boolean withFrame, Point2D position, Double initialScale) {
         this.withFrame = withFrame;
+        this.initialPosition = position;
+        this.initialScaleValue = initialScale;
 
         // Initialize image navigator with callback to change images
-        imageNavigator = new ImageNavigator(this::setImage, this::applyAspectRatioSize);
+        imageNavigator = new ImageNavigator(this::setImage);
         imageNavigator.setCurrentFile(file);
 
         stage = new Stage(withFrame ? StageStyle.DECORATED : StageStyle.UNDECORATED);
@@ -107,8 +112,6 @@ public class ImageViewerWindow {
                 .opacity(0.0)
                 .build();
 
-        setImage(file, false);
-
         scene = buildScene();
 
         setupWindowSizeBinding();
@@ -117,13 +120,18 @@ public class ImageViewerWindow {
 
         stage.setWidth(100);
         stage.setHeight(100);
-        Platform.runLater(() -> initializeWindowSizeAndPosition(position, initialScale));
         stage.setScene(scene);
-        
+
         // Add cleanup when window is closed
         stage.setOnCloseRequest(e -> cleanup());
-        
+
         stage.show();
+
+        // Set up property listeners after stage is shown (frame metrics available)
+        setupPropertyListeners();
+
+        // Start async image load — initial positioning handled in completion callback
+        setImage(file, false);
     }
 
     private Scene buildScene() {
@@ -173,7 +181,8 @@ public class ImageViewerWindow {
         stage.titleProperty()
                 .bind(Bindings.createStringBinding(
                         () -> imageNavigator.getCurrentFile() != null ? imageNavigator.getCurrentFile().getName()
-                                : "No Image", imageNavigator.getCurrentFileProperty()));
+                                : "No Image",
+                        imageNavigator.getCurrentFileProperty()));
     }
 
     private void setupStatusLabelBinding() {
@@ -190,18 +199,18 @@ public class ImageViewerWindow {
                 var canStartSlideShow = imageNavigator.getCanStartSlideShow() ? "'S': slideshow, " : "";
 
                 if (mousePressed.get() || helpMode.get()) {
-                    return baseText + " | " + canStartSlideShow + "'Space': mark/unmark, 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize";
-                }
-                else if (imageNavigator.slideshowModeProperty().get()) {
+                    return baseText + " | " + canStartSlideShow
+                            + "'Space': mark/unmark, 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize";
+                } else if (imageNavigator.slideshowModeProperty().get()) {
                     return baseText + " | 'S': end";
                 }
-                return baseText + " | 'H': help"; 
+                return baseText + " | 'H': help";
             }, orgImageWidth, orgImageHeight, mousePressed, imageNavigator.getMarkedImages(),
                     imageNavigator.slideshowModeProperty(), imageNavigator.isCurrentImageMarked(), helpMode));
         }
     }
 
-    private void initializeWindowSizeAndPosition(Point2D position, Double initialScale) {
+    private void setupPropertyListeners() {
         // It seems that GraalVM Native Image does not support subscribe method.
         // currentScale.subscribe(scale -> setWindowSizeFromScale(scale.doubleValue()));
         // Store listeners for cleanup
@@ -250,12 +259,15 @@ public class ImageViewerWindow {
             });
         };
         imageRotation.addListener(imageRotationListener);
-        if (initialScale != null) {
-            currentScale.set(initialScale);
-            stage.setX(position.getX());
-            stage.setY(position.getY());
+    }
+
+    private void initializeWindowPosition() {
+        windowPositionInitialized = true;
+        if (initialScaleValue != null) {
+            currentScale.set(initialScaleValue);
+            stage.setX(initialPosition.getX());
+            stage.setY(initialPosition.getY());
         } else {
-            currentScale.set(calcScaleFromMaxDimension(MAX_DIMENSION));
             var windowSize = getWindowSize();
             var bounds = Screen.getPrimary().getVisualBounds(); // exclude taskbar
             stage.setX(bounds.getWidth() / 2 - windowSize.getWidth() / 2);
@@ -366,7 +378,6 @@ public class ImageViewerWindow {
                     File firstMarked = imageNavigator.getFirstMarkedImage();
                     if (firstMarked != null) {
                         setImage(firstMarked, true);
-                        applyAspectRatioSize();
                     }
                 }
             }
@@ -387,7 +398,6 @@ public class ImageViewerWindow {
             }
         }
     }
-
 
     private double getFrameBorderWidth() {
         return (stage.getWidth() - scene.getWidth()) / 2;
@@ -459,23 +469,37 @@ public class ImageViewerWindow {
         cancelCurrentAnimation();
 
         imageNavigator.setCurrentFile(file);
-        var originalImage = ImageService.getInstance().getImageFromFile(file);
+        pendingImageFile = file;
 
-        // Restore rotation from memory
-        double savedRotation = ImageService.getInstance().getRotationForFile(file);
+        new Thread(() -> {
+            var originalImage = ImageService.getInstance().getImageFromFile(file);
+            double savedRotation = ImageService.getInstance().getRotationForFile(file);
 
-        // Create rotated image if needed
-        var displayImage = ImageService.createRotatedImage(originalImage, savedRotation);
-        orgImageWidth.set(displayImage.getWidth());
-        orgImageHeight.set(displayImage.getHeight());
+            Platform.runLater(() -> {
+                // Skip if a newer image request has been made
+                if (!file.equals(pendingImageFile))
+                    return;
 
-        imageRotation.set(savedRotation);
+                // Create rotated image (uses snapshot, must be on FX thread)
+                var displayImage = ImageService.createRotatedImage(originalImage, savedRotation);
+                orgImageWidth.set(displayImage.getWidth());
+                orgImageHeight.set(displayImage.getHeight());
 
-        if (animate && imageView.getImage() != null) {
-            crossFadeToImage(displayImage);
-        } else {
-            imageView.setImage(displayImage);
-        }
+                imageRotation.set(savedRotation);
+
+                if (animate && imageView.getImage() != null) {
+                    crossFadeToImage(displayImage);
+                } else {
+                    imageView.setImage(displayImage);
+                }
+
+                applyAspectRatioSize();
+
+                if (!windowPositionInitialized) {
+                    initializeWindowPosition();
+                }
+            });
+        }).start();
     }
 
     private void cancelCurrentAnimation() {
@@ -536,7 +560,7 @@ public class ImageViewerWindow {
             clipboard.setContent(content);
         }
     }
-    
+
     /**
      * Clean up all listeners and bindings to prevent memory leaks
      */
@@ -546,48 +570,48 @@ public class ImageViewerWindow {
             currentScale.removeListener(currentScaleListener);
             currentScaleListener = null;
         }
-        
+
         if (currentFullScreenScaleListener != null) {
             currentFullScreenScale.removeListener(currentFullScreenScaleListener);
             currentFullScreenScaleListener = null;
         }
-        
+
         if (imageTranslateXListener != null) {
             imageTranslateX.removeListener(imageTranslateXListener);
             imageTranslateXListener = null;
         }
-        
+
         if (imageTranslateYListener != null) {
             imageTranslateY.removeListener(imageTranslateYListener);
             imageTranslateYListener = null;
         }
-        
+
         if (imageRotationListener != null) {
             imageRotation.removeListener(imageRotationListener);
             imageRotationListener = null;
         }
-        
+
         // Unbind image view properties
         imageView.fitWidthProperty().unbind();
         imageView.fitHeightProperty().unbind();
         imageView2.fitWidthProperty().unbind();
         imageView2.fitHeightProperty().unbind();
-        
+
         // Unbind stage title
         stage.titleProperty().unbind();
-        
+
         // Unbind status label if it exists
         if (statusLabel != null) {
             statusLabel.textProperty().unbind();
         }
-        
+
         // Cancel any running animations
         cancelCurrentAnimation();
-        
+
         // Clear image references
         imageView.setImage(null);
         imageView2.setImage(null);
-        
+
         // Note: imageCache and rotationMemory are now managed by ImageService singleton
         // and shared across all windows, so they are not cleared here
     }

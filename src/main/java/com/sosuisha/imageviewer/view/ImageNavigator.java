@@ -32,11 +32,9 @@ public class ImageNavigator {
     private double slideshowInterval = 0.0;
     
     private java.util.function.BiConsumer<File, Boolean> onImageChange;
-    private Runnable onApplyAspectRatioSize;
-    
-    public ImageNavigator(java.util.function.BiConsumer<File, Boolean> onImageChange, Runnable onApplyAspectRatioSize) {
+
+    public ImageNavigator(java.util.function.BiConsumer<File, Boolean> onImageChange) {
         this.onImageChange = onImageChange;
-        this.onApplyAspectRatioSize = onApplyAspectRatioSize;
         isCurrentImageMarked.bind(Bindings.createBooleanBinding(() -> markedImages.contains(currentFile.get()), currentFile, markedImages));
         canStartSlideShow.bind(Bindings.createBooleanBinding(() -> !markedImages.isEmpty(), markedImages));
     }
@@ -116,7 +114,6 @@ public class ImageNavigator {
         currentFile.set(nextFile);
         boolean animate = shouldUseCrossFade();
         onImageChange.accept(nextFile, animate);
-        onApplyAspectRatioSize.run();
 
         return true;
     }
@@ -129,7 +126,6 @@ public class ImageNavigator {
         currentFile.set(nextFile);
         boolean animate = shouldUseCrossFade();
         onImageChange.accept(nextFile, animate);
-        onApplyAspectRatioSize.run();
     }
     
     public void getNextImage() {
@@ -140,7 +136,6 @@ public class ImageNavigator {
         currentFile.set(nextFile);
         boolean animate = shouldUseCrossFade();
         onImageChange.accept(nextFile, animate);
-        onApplyAspectRatioSize.run();
     }
     
     public void toggleMarkOnCurrentImage() {
@@ -224,7 +219,6 @@ public class ImageNavigator {
         currentFile.set(nextFile);
         boolean animate = shouldUseCrossFade();
         onImageChange.accept(nextFile, animate);
-        onApplyAspectRatioSize.run();
     }
     
     public void navigateToNextMarked() {
@@ -238,7 +232,6 @@ public class ImageNavigator {
         currentFile.set(nextFile);
         boolean animate = shouldUseCrossFade();
         onImageChange.accept(nextFile, animate);
-        onApplyAspectRatioSize.run();
     }
     
     public File getFirstMarkedImage() {
