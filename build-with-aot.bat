@@ -1,7 +1,5 @@
 @echo off
 
-mvc clean package
-
 cd target/package
 
 echo Generating AOT cache...

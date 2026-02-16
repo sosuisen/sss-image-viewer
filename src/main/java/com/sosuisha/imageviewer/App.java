@@ -17,9 +17,7 @@ public class App extends Application {
         // for benchmark: Automatically exit after opening the file to measure startup
         // time without user interaction
         if ("true".equals(System.getProperty("auto.exit"))) {
-            Platform.runLater(() -> {
-                Platform.exit();
-            });
+            Platform.exit();
         }
 
         var params = getParameters();
