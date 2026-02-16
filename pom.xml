@@ -82,6 +82,7 @@
           <javaOptions>
             <option>-Dfile.encoding=UTF-8</option>
             <option>-XX:SharedArchiveFile=app.jsa</option>
+            <option>--enable-native-access=com.sosuisha.imageviewer</option>
           </javaOptions>
           <type>${jpackage.type}</type>
           <!-- Options for MSI -->

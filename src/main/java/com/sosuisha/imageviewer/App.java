@@ -19,7 +19,8 @@ public class App extends Application {
         openFile(stage, filePath, false);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Throwable {
+        args = UnicodeArgs.resolveArgs(args);
         Application.launch(App.class, args);
     }
 
