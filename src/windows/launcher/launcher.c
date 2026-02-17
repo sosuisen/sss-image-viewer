@@ -51,21 +51,32 @@ static BOOL trySendToExisting(const char *utf8Msg) {
     if (hFile == INVALID_HANDLE_VALUE)
         return FALSE;
 
-    char portBuf[16];
+    char fileBuf[64];
     DWORD bytesRead = 0;
-    ReadFile(hFile, portBuf, sizeof(portBuf) - 1, &bytesRead, NULL);
+    ReadFile(hFile, fileBuf, sizeof(fileBuf) - 1, &bytesRead, NULL);
     CloseHandle(hFile);
-    portBuf[bytesRead] = '\0';
-    trimRight(portBuf);
+    fileBuf[bytesRead] = '\0';
 
+    /* Parse "port\npid" format */
     int port = 0;
-    for (int i = 0; portBuf[i]; i++) {
-        if (portBuf[i] < '0' || portBuf[i] > '9')
-            return FALSE;
-        port = port * 10 + (portBuf[i] - '0');
+    DWORD pid = 0;
+    char *p = fileBuf;
+
+    /* Read port number */
+    while (*p >= '0' && *p <= '9') {
+        port = port * 10 + (*p - '0');
+        p++;
     }
     if (port <= 0 || port > 65535)
         return FALSE;
+
+    /* Skip newline/whitespace, then read PID */
+    while (*p == '\r' || *p == '\n' || *p == ' ')
+        p++;
+    while (*p >= '0' && *p <= '9') {
+        pid = pid * 10 + (*p - '0');
+        p++;
+    }
 
     /* Winsock init */
     WSADATA wsa;
@@ -90,6 +101,11 @@ static BOOL trySendToExisting(const char *utf8Msg) {
         WSACleanup();
         DeleteFileW(portFilePath);   /* stale port file */
         return FALSE;
+    }
+
+    /* Grant the viewer process permission to steal foreground */
+    if (pid > 0) {
+        AllowSetForegroundWindow(pid);
     }
 
     /* Send UTF-8 message + newline */

@@ -65,7 +65,8 @@ class SingleInstanceService {
      */
     void startServer(Consumer<String> onFileReceived) throws IOException {
         serverSocket = new ServerSocket(0, 50, InetAddress.getLoopbackAddress());
-        Files.writeString(PORT_FILE, String.valueOf(serverSocket.getLocalPort()));
+        long pid = ProcessHandle.current().pid();
+        Files.writeString(PORT_FILE, serverSocket.getLocalPort() + "\n" + pid);
 
         Thread acceptThread = new Thread(() -> {
             while (!serverSocket.isClosed()) {

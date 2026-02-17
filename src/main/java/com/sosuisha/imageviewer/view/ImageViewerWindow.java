@@ -126,6 +126,8 @@ public class ImageViewerWindow {
         stage.setOnCloseRequest(e -> cleanup());
 
         stage.show();
+        stage.toFront();
+        stage.requestFocus();
 
         // Set up property listeners after stage is shown (frame metrics available)
         setupPropertyListeners();
