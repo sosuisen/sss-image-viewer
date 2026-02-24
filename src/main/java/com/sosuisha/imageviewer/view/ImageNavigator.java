@@ -21,7 +21,7 @@ import javafx.util.Duration;
 
 public class ImageNavigator {
     public static final int CROSSFADE_DURATION_MILLIS = 300;
-    
+
     private List<File> files = null;
     private ObjectProperty<File> currentFile = new SimpleObjectProperty<>(null);
     private ObservableList<File> markedImages = FXCollections.observableArrayList();
@@ -30,23 +30,24 @@ public class ImageNavigator {
     private BooleanProperty canStartSlideShow = new SimpleBooleanProperty(false);
     private Timeline slideshowTimer = null;
     private double slideshowInterval = 0.0;
-    
+
     private java.util.function.BiConsumer<File, Boolean> onImageChange;
 
     public ImageNavigator(java.util.function.BiConsumer<File, Boolean> onImageChange) {
         this.onImageChange = onImageChange;
-        isCurrentImageMarked.bind(Bindings.createBooleanBinding(() -> markedImages.contains(currentFile.get()), currentFile, markedImages));
+        isCurrentImageMarked.bind(Bindings.createBooleanBinding(() -> markedImages.contains(currentFile.get()),
+                currentFile, markedImages));
         canStartSlideShow.bind(Bindings.createBooleanBinding(() -> !markedImages.isEmpty(), markedImages));
     }
-    
+
     public void setCurrentFile(File file) {
         this.currentFile.set(file);
     }
-    
+
     public File getCurrentFile() {
         return currentFile.get();
     }
-    
+
     public ObjectProperty<File> getCurrentFileProperty() {
         return currentFile;
     }
@@ -54,7 +55,7 @@ public class ImageNavigator {
     public boolean getCanStartSlideShow() {
         return canStartSlideShow.get();
     }
-    
+
     public void updateFileList(File file) {
         if (files != null) {
             return;
@@ -70,23 +71,21 @@ public class ImageNavigator {
     }
 
     /**
-     * Deletes the current image file from the file system and navigates to the next available image.
-     * @return true if there are still images available after deletion, false if no images remain
+     * Deletes the current image file from the file system and navigates to the next
+     * available image.
+     * 
+     * @return true if there are still images available after deletion, false if no
+     *         images remain
      */
     public boolean deleteCurrentFile() {
-        if (currentFile.get() == null || files == null || files.isEmpty()) {
+        if (currentFile.get() == null) {
             return false;
         }
 
         File fileToDelete = currentFile.get();
-        int currentIndex = files.indexOf(fileToDelete);
 
-        if (currentIndex == -1) {
-            return false;
-        }
-
-        // Try to delete the actual file first
-        boolean deleted = fileToDelete.delete();
+        // Move the file to trash instead of deleting directly
+        boolean deleted = java.awt.Desktop.getDesktop().moveToTrash(fileToDelete);
 
         if (!deleted) {
             // Deletion failed, return true since files still exist
@@ -96,6 +95,15 @@ public class ImageNavigator {
         // Deletion succeeded, now update the internal state
         // Remove from marked images if it's marked
         markedImages.remove(fileToDelete);
+
+        if (files == null || files.isEmpty()) {
+            return false;
+        }
+
+        int currentIndex = files.indexOf(fileToDelete);
+        if (currentIndex == -1) {
+            return false;
+        }
 
         // Remove from the file list
         files.remove(currentIndex);
@@ -127,7 +135,7 @@ public class ImageNavigator {
         boolean animate = shouldUseCrossFade();
         onImageChange.accept(nextFile, animate);
     }
-    
+
     public void getNextImage() {
         updateFileList(currentFile.get());
         var index = files.indexOf(currentFile.get());
@@ -137,7 +145,7 @@ public class ImageNavigator {
         boolean animate = shouldUseCrossFade();
         onImageChange.accept(nextFile, animate);
     }
-    
+
     public void toggleMarkOnCurrentImage() {
         if (currentFile.get() != null) {
             if (markedImages.contains(currentFile.get())) {
@@ -147,20 +155,20 @@ public class ImageNavigator {
             }
         }
     }
-    
+
     public BooleanProperty isCurrentImageMarked() {
         return isCurrentImageMarked;
     }
-    
+
     public String getMarkedImagePosition() {
         if (currentFile.get() == null || !markedImages.contains(currentFile.get())) {
             return "";
         }
-        
+
         int position = markedImages.indexOf(currentFile.get()) + 1;
         return position + "/" + markedImages.size();
     }
-    
+
     public void toggleSlideshow() {
         if (slideshowMode.get()) {
             stopSlideshow();
@@ -168,25 +176,25 @@ public class ImageNavigator {
             startSlideshow();
         }
     }
-    
+
     private void startSlideshow() {
         if (markedImages.isEmpty()) {
             return;
         }
-        
+
         var dialog = TextInputDialogBuilder.create(String.valueOf(slideshowInterval))
                 .title("Slideshow Settings")
                 .headerText("Enter slideshow interval")
                 .contentText("Seconds between images (0 = manual navigation):")
                 .build();
-        
+
         var result = dialog.showAndWait();
         if (result.isPresent()) {
             try {
                 double seconds = Double.parseDouble(result.get());
                 slideshowInterval = seconds;
                 slideshowMode.set(true);
-                
+
                 if (seconds > 0) {
                     slideshowTimer = new Timeline(new KeyFrame(Duration.seconds(seconds), _ -> {
                         navigateToNextMarked();
@@ -199,7 +207,7 @@ public class ImageNavigator {
             }
         }
     }
-    
+
     private void stopSlideshow() {
         slideshowMode.set(false);
         if (slideshowTimer != null) {
@@ -207,12 +215,12 @@ public class ImageNavigator {
             slideshowTimer = null;
         }
     }
-       
+
     public void navigateToPreviousMarked() {
         if (markedImages.isEmpty()) {
             return;
         }
-        
+
         int currentIndex = markedImages.indexOf(currentFile.get());
         int nextIndex = currentIndex > 0 ? currentIndex - 1 : markedImages.size() - 1;
         File nextFile = markedImages.get(nextIndex);
@@ -220,12 +228,12 @@ public class ImageNavigator {
         boolean animate = shouldUseCrossFade();
         onImageChange.accept(nextFile, animate);
     }
-    
+
     public void navigateToNextMarked() {
         if (markedImages.isEmpty()) {
             return;
         }
-        
+
         int currentIndex = markedImages.indexOf(currentFile.get());
         int nextIndex = currentIndex < markedImages.size() - 1 ? currentIndex + 1 : 0;
         File nextFile = markedImages.get(nextIndex);
@@ -233,31 +241,31 @@ public class ImageNavigator {
         boolean animate = shouldUseCrossFade();
         onImageChange.accept(nextFile, animate);
     }
-    
+
     public File getFirstMarkedImage() {
         return markedImages.isEmpty() ? null : markedImages.get(0);
     }
-    
+
     // Getters
     public BooleanProperty slideshowModeProperty() {
         return slideshowMode;
     }
-    
+
     public ObservableList<File> getMarkedImages() {
         return markedImages;
     }
-    
+
     public double getSlideshowInterval() {
         return slideshowInterval;
     }
-    
+
     public boolean shouldUseCrossFade() {
         // Don't use cross-fade if slideshow is active and interval is too short
-        if (slideshowMode.get() && slideshowInterval > 0 && 
-            slideshowInterval * 1000 <= CROSSFADE_DURATION_MILLIS) {
+        if (slideshowMode.get() && slideshowInterval > 0 &&
+                slideshowInterval * 1000 <= CROSSFADE_DURATION_MILLIS) {
             return false;
         }
         return true;
     }
-    
+
 }
