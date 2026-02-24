@@ -393,6 +393,11 @@ public class ImageViewerWindow {
                     Platform.exit();
                 }
             }
+            case M -> {
+                if (!imageNavigator.getMarkedImages().isEmpty()) {
+                    new MarkedImagesGridWindow(imageNavigator.getMarkedImages());
+                }
+            }
             case DELETE -> {
                 boolean hasMoreImages = imageNavigator.deleteCurrentFile();
                 if (!hasMoreImages) {
