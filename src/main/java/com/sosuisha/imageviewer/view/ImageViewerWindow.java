@@ -1,8 +1,11 @@
 package com.sosuisha.imageviewer.view;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.UUID;
 
 import com.sosuisha.imageviewer.ImageService;
+import com.sosuisha.imageviewer.SharedMarkManager;
 import com.sosuisha.imageviewer.view.jfxbuilder.BorderPaneBuilder;
 import com.sosuisha.imageviewer.view.jfxbuilder.ImageViewBuilder;
 import com.sosuisha.imageviewer.view.jfxbuilder.LabelBuilder;
@@ -68,6 +71,8 @@ public class ImageViewerWindow {
     private boolean windowPositionInitialized = false;
     private Point2D initialPosition;
     private Double initialScaleValue;
+    private final String windowId = UUID.randomUUID().toString();
+    private boolean skipUnregisterOnClose = false;
 
     // Store listener references for cleanup
     private javafx.beans.value.ChangeListener<Number> currentScaleListener;
@@ -98,6 +103,13 @@ public class ImageViewerWindow {
         // Initialize image navigator with callback to change images
         imageNavigator = new ImageNavigator(this::setImage);
         imageNavigator.setCurrentFile(file);
+
+        // Build file list and register with shared mark manager
+        imageNavigator.updateFileList(file);
+        var fileList = imageNavigator.getFiles();
+        if (fileList != null) {
+            SharedMarkManager.getInstance().registerWindow(windowId, new HashSet<>(fileList));
+        }
 
         stage = new Stage(withFrame ? StageStyle.DECORATED : StageStyle.UNDECORATED);
 
@@ -353,6 +365,7 @@ public class ImageViewerWindow {
                 imageRotation.set(currentRotation + 90);
             }
             case ENTER -> {
+                skipUnregisterOnClose = true;
                 new ImageViewerWindow(imageNavigator.getCurrentFile(), !withFrame,
                         new Point2D(stage.getX(), stage.getY()),
                         currentScale.get());
@@ -371,15 +384,25 @@ public class ImageViewerWindow {
                 imageNavigator.toggleMarkOnCurrentImage();
             }
             case S -> {
+                boolean wasSlideshow = imageNavigator.slideshowModeProperty().get();
                 imageNavigator.toggleSlideshow();
 
-                // If slideshow started and current image is not marked, navigate to first
-                // marked
-                if (imageNavigator.slideshowModeProperty().get() &&
-                        !imageNavigator.isCurrentImageMarked().get()) {
-                    File firstMarked = imageNavigator.getFirstMarkedImage();
-                    if (firstMarked != null) {
-                        setImage(firstMarked, true);
+                // If slideshow just started, enter fullscreen
+                if (!wasSlideshow && imageNavigator.slideshowModeProperty().get()) {
+                    if (!isFullScreen.get()) {
+                        stage.setFullScreen(true);
+                        isFullScreen.set(true);
+                        currentFullScreenScale.set(1.0);
+                        imageTranslateX.set(0.0);
+                        imageTranslateY.set(0.0);
+                    }
+
+                    // Navigate to first marked if current image is not marked
+                    if (!imageNavigator.isCurrentImageMarked().get()) {
+                        File firstMarked = imageNavigator.getFirstMarkedImage();
+                        if (firstMarked != null) {
+                            setImage(firstMarked, true);
+                        }
                     }
                 }
             }
@@ -577,6 +600,14 @@ public class ImageViewerWindow {
      * Clean up all listeners and bindings to prevent memory leaks
      */
     private void cleanup() {
+        // Stop slideshow if running
+        imageNavigator.stopSlideshow();
+
+        // Unregister from shared mark manager (unless toggling frame)
+        if (!skipUnregisterOnClose) {
+            SharedMarkManager.getInstance().unregisterWindow(windowId);
+        }
+
         // Remove property listeners
         if (currentScaleListener != null) {
             currentScale.removeListener(currentScaleListener);

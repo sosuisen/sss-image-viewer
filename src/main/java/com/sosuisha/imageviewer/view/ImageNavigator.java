@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.sosuisha.imageviewer.ImageService;
+import com.sosuisha.imageviewer.SharedMarkManager;
 import com.sosuisha.imageviewer.view.jfxbuilder.TextInputDialogBuilder;
 
 import javafx.animation.KeyFrame;
@@ -24,7 +25,7 @@ public class ImageNavigator {
 
     private List<File> files = null;
     private ObjectProperty<File> currentFile = new SimpleObjectProperty<>(null);
-    private ObservableList<File> markedImages = FXCollections.observableArrayList();
+    private ObservableList<File> markedImages = SharedMarkManager.getInstance().getMarkedImages();
     private BooleanProperty slideshowMode = new SimpleBooleanProperty(false);
     private BooleanProperty isCurrentImageMarked = new SimpleBooleanProperty(false);
     private BooleanProperty canStartSlideShow = new SimpleBooleanProperty(false);
@@ -94,7 +95,7 @@ public class ImageNavigator {
 
         // Deletion succeeded, now update the internal state
         // Remove from marked images if it's marked
-        markedImages.remove(fileToDelete);
+        SharedMarkManager.getInstance().unmark(fileToDelete);
 
         if (files == null || files.isEmpty()) {
             return false;
@@ -147,13 +148,7 @@ public class ImageNavigator {
     }
 
     public void toggleMarkOnCurrentImage() {
-        if (currentFile.get() != null) {
-            if (markedImages.contains(currentFile.get())) {
-                markedImages.remove(currentFile.get());
-            } else {
-                markedImages.add(currentFile.get());
-            }
-        }
+        SharedMarkManager.getInstance().toggleMark(currentFile.get());
     }
 
     public BooleanProperty isCurrentImageMarked() {
@@ -208,7 +203,7 @@ public class ImageNavigator {
         }
     }
 
-    private void stopSlideshow() {
+    public void stopSlideshow() {
         slideshowMode.set(false);
         if (slideshowTimer != null) {
             slideshowTimer.stop();
@@ -257,6 +252,10 @@ public class ImageNavigator {
 
     public double getSlideshowInterval() {
         return slideshowInterval;
+    }
+
+    public List<File> getFiles() {
+        return files;
     }
 
     public boolean shouldUseCrossFade() {
