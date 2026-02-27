@@ -130,6 +130,31 @@
         <!-- If you choose MSI, install WiX ver3 and set the path -->
         <jpackage.type>APP_IMAGE</jpackage.type>
       </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+              <execution>
+                <id>chmod-exe</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <executable>chmod</executable>
+                  <arguments>
+                    <argument>777</argument>
+                    <argument>${project.build.directory}/jpackage/${project.artifactId}/${project.artifactId}.exe</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
     <profile>
       <id>mac</id>
