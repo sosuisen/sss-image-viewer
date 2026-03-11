@@ -39,6 +39,7 @@ public class ImageService {
     // Persistent caches shared across all windows
     // Use canonical path strings as keys to avoid File object equality issues
     private final Map<String, Image> imageCache = new ConcurrentHashMap<>();
+    private final Map<String, Long> lastModifiedCache = new ConcurrentHashMap<>();
     private final Map<String, Double> rotationMemory = new ConcurrentHashMap<>();
     private final Map<AspectRatio, Dimension2D> aspectRatioSizes = new ConcurrentHashMap<>();
     
@@ -113,11 +114,20 @@ public class ImageService {
         if (path == null) {
             return null;
         }
-        return imageCache.computeIfAbsent(path, p -> new Image(file.toURI().toString()));
+        long currentLastModified = file.lastModified();
+        Long cachedLastModified = lastModifiedCache.get(path);
+        if (cachedLastModified == null || cachedLastModified != currentLastModified) {
+            Image image = new Image(file.toURI().toString());
+            imageCache.put(path, image);
+            lastModifiedCache.put(path, currentLastModified);
+            return image;
+        }
+        return imageCache.get(path);
     }
-    
+
     public void clearImageCache() {
         imageCache.clear();
+        lastModifiedCache.clear();
     }
     
     // Rotation memory management
@@ -160,4 +170,5 @@ public class ImageService {
         clearRotationMemory();
         clearAspectRatioSizes();
     }
+
 }
