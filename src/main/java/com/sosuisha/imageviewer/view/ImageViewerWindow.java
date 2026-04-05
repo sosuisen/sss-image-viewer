@@ -210,10 +210,10 @@ public class ImageViewerWindow {
                 var slideshowPrefix = imageNavigator.slideshowModeProperty().get() ? "[SLIDESHOW] " : "";
                 var baseText = slideshowPrefix + markPrefix + (int) orgImageWidth.get() + " x "
                         + (int) orgImageHeight.get();
-                var canStartSlideShow = imageNavigator.getCanStartSlideShow() ? "'S': slideshow, " : "";
+                var markedActions = imageNavigator.getCanStartSlideShow() ? "'S': slideshow, 'G': grid view, " : "";
 
                 if (mousePressed.get() || helpMode.get()) {
-                    return baseText + " | " + canStartSlideShow
+                    return baseText + " | " + markedActions
                             + "'Space': mark/unmark, 'D': duplicate, 'Enter': noframe, 'Esc': close, 'DblClick': maximize";
                 } else if (imageNavigator.slideshowModeProperty().get()) {
                     return baseText + " | 'S': end";
@@ -416,7 +416,7 @@ public class ImageViewerWindow {
                     Platform.exit();
                 }
             }
-            case M -> {
+            case G -> {
                 if (!imageNavigator.getMarkedImages().isEmpty()) {
                     new MarkedImagesGridWindow(imageNavigator.getMarkedImages());
                 }

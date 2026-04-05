@@ -61,7 +61,7 @@ public class MarkedImagesGridWindow {
         Stage stage = new Stage(StageStyle.UNDECORATED);
         Scene scene = new Scene(container);
         scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.M) {
+            if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.G) {
                 stage.close();
             }
         });

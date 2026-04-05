@@ -35,6 +35,7 @@ The app supports the following image formats:
 - **Up/Down Arrow Keys** - Rotate image (90° increments)
 - **Space** - Mark/unmark image for slideshow
 - **S** - Toggle slideshow mode
+- **G** - Show marked images in grid view
 - **Enter** - Toggle window frame
 - **D** - Duplicate window
 - **F11** - Toggle fullscreen
