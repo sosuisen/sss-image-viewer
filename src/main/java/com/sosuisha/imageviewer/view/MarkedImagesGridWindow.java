@@ -7,6 +7,7 @@ import java.util.List;
 import com.sosuisha.imageviewer.GridImageEntry;
 import com.sosuisha.imageviewer.ImageService;
 import com.sosuisha.imageviewer.MarkPersistenceService;
+import com.sosuisha.imageviewer.SharedMarkManager;
 
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -114,7 +115,12 @@ public class MarkedImagesGridWindow {
             }
         });
 
-        stage.setOnHidden(_ -> saveGridEntries());
+        stage.setOnHidden(_ -> {
+            saveGridEntries();
+            if (sessionId != null) {
+                SharedMarkManager.getInstance().getMarkedImages().clear();
+            }
+        });
         stage.setScene(scene);
         stage.setMaximized(true);
         stage.show();
