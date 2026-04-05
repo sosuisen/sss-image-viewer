@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.sosuisha.imageviewer.ImageService;
+import com.sosuisha.imageviewer.MarkPersistenceService;
 import com.sosuisha.imageviewer.SharedMarkManager;
 import com.sosuisha.imageviewer.view.jfxbuilder.TextInputDialogBuilder;
 
@@ -188,6 +189,7 @@ public class ImageNavigator {
                 double seconds = Double.parseDouble(result.get());
                 slideshowInterval = seconds;
                 slideshowMode.set(true);
+                MarkPersistenceService.getInstance().saveMarkedImages(markedImages);
 
                 if (seconds > 0) {
                     slideshowTimer = new Timeline(new KeyFrame(Duration.seconds(seconds), _ -> {

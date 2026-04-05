@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.UUID;
 
 import com.sosuisha.imageviewer.ImageService;
+import com.sosuisha.imageviewer.MarkPersistenceService;
 import com.sosuisha.imageviewer.SharedMarkManager;
 import com.sosuisha.imageviewer.view.jfxbuilder.BorderPaneBuilder;
 import com.sosuisha.imageviewer.view.jfxbuilder.ImageViewBuilder;
@@ -418,6 +419,7 @@ public class ImageViewerWindow {
             }
             case G -> {
                 if (!imageNavigator.getMarkedImages().isEmpty()) {
+                    MarkPersistenceService.getInstance().saveMarkedImages(imageNavigator.getMarkedImages());
                     new MarkedImagesGridWindow(imageNavigator.getMarkedImages());
                 }
             }
