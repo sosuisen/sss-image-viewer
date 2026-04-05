@@ -91,7 +91,9 @@ public class MarkedImagesGridWindow {
             Image displayImage = ImageService.createRotatedImage(originalImage, rotation);
             double baseWeight = displayImage.getWidth() * displayImage.getHeight();
             double weight = baseWeight * ge.frameScale();
-            entries.add(new TreemapEntry(ge.file(), displayImage, weight, ge.imageScale(), order++));
+            var entry = new TreemapEntry(ge.file(), displayImage, baseWeight, ge.imageScale(), order++);
+            entry.weight = weight;
+            entries.add(entry);
         }
 
         showGrid();

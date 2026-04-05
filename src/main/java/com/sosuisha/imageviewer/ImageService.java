@@ -24,9 +24,10 @@ public class ImageService {
     // Image format support
     public static final String[] AVAILABLE_IMAGE_FORMATS = {
         "gif",
-        "bmp", 
+        "bmp",
         "png",
-        "jpeg", "jpg", "jfif"
+        "jpeg", "jpg", "jfif",
+        "webp"
     };
     
     // Aspect ratio enum
