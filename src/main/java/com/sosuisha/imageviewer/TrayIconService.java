@@ -113,12 +113,15 @@ class TrayIconService {
 
     private static Image createIcon() {
         try {
-            var stream = TrayIconService.class.getResourceAsStream("/icon.ico");
+            var stream = TrayIconService.class.getResourceAsStream("/icon.png");
             if (stream != null) {
-                return ImageIO.read(stream);
+                var image = ImageIO.read(stream);
+                if (image != null) {
+                    return image;
+                }
             }
         } catch (IOException e) {
-            System.err.println("Failed to load icon.ico: " + e.getMessage());
+            System.err.println("Failed to load icon.png: " + e.getMessage());
         }
         return createFallbackIcon();
     }

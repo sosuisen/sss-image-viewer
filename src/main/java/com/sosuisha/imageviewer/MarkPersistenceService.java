@@ -23,6 +23,11 @@ public class MarkPersistenceService {
     private final List<Runnable> changeListeners = new ArrayList<>();
 
     private MarkPersistenceService() {
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            System.err.println("SQLite JDBC driver not found: " + e.getMessage());
+        }
         var dbDir = Path.of(System.getProperty("user.home"), ".sss-image-viewer");
         try {
             Files.createDirectories(dbDir);
