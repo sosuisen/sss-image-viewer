@@ -42,7 +42,9 @@ class TrayIconService {
         });
         var popup = new JPopupMenu();
         popup.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        var quitItem = new JMenuItem("Quit", createCloseIcon());
+        var historyItem = new JMenuItem("History", loadIcon("/history_icon.png"));
+        popup.add(historyItem);
+        var quitItem = new JMenuItem("Quit", loadIcon("/quit_icon.png"));
         quitItem.addActionListener(_ -> Platform.runLater(Platform::exit));
         popup.add(quitItem);
 
@@ -90,9 +92,9 @@ class TrayIconService {
         }
     }
 
-    private static javax.swing.Icon createCloseIcon() {
+    private static javax.swing.Icon loadIcon(String resourcePath) {
         try {
-            var stream = TrayIconService.class.getResourceAsStream("/quit_icon.png");
+            var stream = TrayIconService.class.getResourceAsStream(resourcePath);
             if (stream != null) {
                 var original = ImageIO.read(stream);
                 int targetSize = 16;
@@ -100,7 +102,7 @@ class TrayIconService {
                 return new javax.swing.ImageIcon(scaled);
             }
         } catch (IOException e) {
-            System.err.println("Failed to load quit_icon.png: " + e.getMessage());
+            System.err.println("Failed to load " + resourcePath + ": " + e.getMessage());
         }
         return null;
     }
