@@ -2,6 +2,8 @@ package com.sosuisha.imageviewer;
 
 import javafx.application.Platform;
 
+import com.sosuisha.imageviewer.view.HistoryWindow;
+
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -43,6 +45,7 @@ class TrayIconService {
         var popup = new JPopupMenu();
         popup.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         var historyItem = new JMenuItem("History", loadIcon("/history_icon.png"));
+        historyItem.addActionListener(_ -> Platform.runLater(HistoryWindow::new));
         popup.add(historyItem);
         var quitItem = new JMenuItem("Quit", loadIcon("/quit_icon.png"));
         quitItem.addActionListener(_ -> Platform.runLater(Platform::exit));
@@ -50,6 +53,7 @@ class TrayIconService {
 
         trayIcon = new TrayIcon(createIcon(), "SSS Image Viewer");
         trayIcon.setImageAutoSize(true);
+        trayIcon.addActionListener(_ -> Platform.runLater(HistoryWindow::new));
         trayIcon.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {

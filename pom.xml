@@ -11,6 +11,7 @@
     <javafx.version>25.0.2</javafx.version>
     <maven.compiler.release>25</maven.compiler.release>
     <twelvemonkeys.version>3.13.1</twelvemonkeys.version>
+    <javafx.builder.version>25.0.0</javafx.builder.version>
     <main.class>com.sosuisha.imageviewer.App</main.class>
   </properties>
 
@@ -24,6 +25,16 @@
       <groupId>org.xerial</groupId>
       <artifactId>sqlite-jdbc</artifactId>
       <version>3.51.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.sosuisen</groupId>
+      <artifactId>javafx-builder-controls</artifactId>
+      <version>${javafx.builder.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.sosuisen</groupId>
+      <artifactId>javafx-builder-graphics</artifactId>
+      <version>${javafx.builder.version}</version>
     </dependency>
     <dependency>
       <groupId>com.twelvemonkeys.imageio</groupId>

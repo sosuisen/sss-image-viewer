@@ -4,7 +4,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sosuisha.imageviewer.GridImageEntry;
 import com.sosuisha.imageviewer.ImageService;
+import com.sosuisha.imageviewer.MarkPersistenceService;
 
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -21,37 +23,81 @@ import javafx.stage.StageStyle;
 public class MarkedImagesGridWindow {
 
     private final List<TreemapEntry> entries = new ArrayList<>();
+    private String sessionId;
     private double areaW;
     private double areaH;
 
     private static class TreemapEntry {
+        final File file;
         final Image image;
+        final double initialWeight;
+        final double imageScale;
+        final int markOrder;
         double weight;
         StackPane cell;
         ImageView imageView;
 
-        TreemapEntry(Image image, double weight) {
+        TreemapEntry(File file, Image image, double weight, double imageScale, int markOrder) {
+            this.file = file;
             this.image = image;
+            this.initialWeight = weight;
+            this.imageScale = imageScale;
+            this.markOrder = markOrder;
             this.weight = weight;
         }
     }
 
     private record Rect(double x, double y, double w, double h) {}
 
+    /**
+     * Opens a grid window for the given marked images with default scales.
+     *
+     * @param markedImages list of marked image files
+     */
     public MarkedImagesGridWindow(List<File> markedImages) {
         if (markedImages.isEmpty()) {
             return;
         }
 
-        // Load images and calculate weights based on pixel area
+        int order = 0;
         for (File file : markedImages) {
             Image originalImage = ImageService.getInstance().getImageFromFile(file);
             double rotation = ImageService.getInstance().getRotationForFile(file);
             Image displayImage = ImageService.createRotatedImage(originalImage, rotation);
             double weight = displayImage.getWidth() * displayImage.getHeight();
-            entries.add(new TreemapEntry(displayImage, weight));
+            entries.add(new TreemapEntry(file, displayImage, weight, 1.0, order++));
         }
 
+        showGrid();
+    }
+
+    /**
+     * Opens a grid window restoring saved scales from a history session.
+     *
+     * @param gridImageEntries list of grid image entries with saved scale data
+     * @param sessionId        the existing session ID to overwrite on save
+     * @throws NullPointerException if sessionId is null
+     */
+    public MarkedImagesGridWindow(List<GridImageEntry> gridImageEntries, String sessionId) {
+        this.sessionId = java.util.Objects.requireNonNull(sessionId, "sessionId must not be null");
+        if (gridImageEntries.isEmpty()) {
+            return;
+        }
+
+        int order = 0;
+        for (var ge : gridImageEntries) {
+            Image originalImage = ImageService.getInstance().getImageFromFile(ge.file());
+            double rotation = ImageService.getInstance().getRotationForFile(ge.file());
+            Image displayImage = ImageService.createRotatedImage(originalImage, rotation);
+            double baseWeight = displayImage.getWidth() * displayImage.getHeight();
+            double weight = baseWeight * ge.frameScale();
+            entries.add(new TreemapEntry(ge.file(), displayImage, weight, ge.imageScale(), order++));
+        }
+
+        showGrid();
+    }
+
+    private void showGrid() {
         // Sort once by weight descending for initial treemap layout
         entries.sort((a, b) -> Double.compare(b.weight, a.weight));
 
@@ -66,6 +112,7 @@ public class MarkedImagesGridWindow {
             }
         });
 
+        stage.setOnHidden(_ -> saveGridEntries());
         stage.setScene(scene);
         stage.setMaximized(true);
         stage.show();
@@ -74,11 +121,12 @@ public class MarkedImagesGridWindow {
         areaW = screenBounds.getWidth();
         areaH = screenBounds.getHeight();
 
-        // Create cells for each entry
         for (TreemapEntry entry : entries) {
             ImageView imageView = new ImageView(entry.image);
             imageView.setPreserveRatio(true);
             imageView.setSmooth(true);
+            imageView.setScaleX(entry.imageScale);
+            imageView.setScaleY(entry.imageScale);
 
             StackPane cell = new StackPane(imageView);
             cell.setAlignment(Pos.CENTER);
@@ -86,7 +134,6 @@ public class MarkedImagesGridWindow {
             entry.cell = cell;
             entry.imageView = imageView;
 
-            // Scroll: normal = image zoom, Ctrl = resize treemap area
             cell.setOnScroll(e -> {
                 double scaleFactor = e.getDeltaY() > 0 ? 1.1 : 0.9;
                 if (e.isControlDown()) {
@@ -99,7 +146,6 @@ public class MarkedImagesGridWindow {
                 e.consume();
             });
 
-            // Drag to pan within each cell
             final double[] dragStart = new double[2];
             cell.setOnMousePressed(e -> {
                 dragStart[0] = e.getX() - imageView.getTranslateX();
@@ -119,6 +165,20 @@ public class MarkedImagesGridWindow {
 
         stage.toFront();
         stage.requestFocus();
+    }
+
+    private void saveGridEntries() {
+        var gridEntries = new ArrayList<GridImageEntry>();
+        for (var entry : entries) {
+            double imageScale = entry.imageView.getScaleX();
+            double frameScale = entry.weight / entry.initialWeight;
+            gridEntries.add(new GridImageEntry(entry.file, entry.markOrder, imageScale, frameScale));
+        }
+        var service = MarkPersistenceService.getInstance();
+        if (sessionId != null) {
+            service.deleteSession(sessionId);
+        }
+        service.saveGridEntries(gridEntries, sessionId);
     }
 
     private void relayout() {
