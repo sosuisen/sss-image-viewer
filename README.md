@@ -1,62 +1,59 @@
 # SSS Image Viewer
 
-A JavaFX-based quick image viewer.
+A fast, lightweight image viewer built with JavaFX.
 
-One of the advantages of JavaFX is that it allows for the creation of fast-starting applications by generating native images. This feature makes it particularly suitable for developing image viewers.
+JavaFX with AOT compilation enables fast startup, making it well suited for an image viewer.
 
 ## Features
 
 - Image viewing with rotation support
-- Easy image scaling using the mouse wheel
-- Simple image layout by dragging the window
-- No frame mode
-- Fullscreen mode
+- Zoom in/out with the mouse wheel
+- Window positioning by dragging
+- Frameless and fullscreen modes
 - Navigate between images in a directory
-- Slideshow feature
+- Mark images for slideshow and grid view
 - Copy image to clipboard (Ctrl+C)
+- System tray resident mode
 
 ## Supported Image Formats
 
-If you set this app as the default for opening image files, you can enjoy a fast image viewer.
-
-The app supports the following image formats:
+Set this app as the default image viewer to enjoy fast image browsing.
 
 - **GIF** - Full support
 - **PNG** - Full support
 - **JPEG/JPG** - Full support
 - **JFIF** - Full support
-- **BMP** - ⚠️ **Limited support** - Some BMP variants may not display correctly
+- **BMP** - Limited support (some variants may not display correctly)
 
 ## Usage
 
 ### Keyboard Shortcuts
 
 - **Left/Right Arrow Keys** - Navigate between images
-- **Up/Down Arrow Keys** - Rotate image (90° increments)
-- **Space** - Mark/unmark image for slideshow
+- **Up/Down Arrow Keys** - Rotate image (90 increments)
+- **Space** - Mark/unmark image
 - **S** - Toggle slideshow mode
 - **G** - Show marked images in grid view
+- **H** - Show help
 - **Enter** - Toggle window frame
 - **D** - Duplicate window
 - **F11** - Toggle fullscreen
 - **Ctrl+C** - Copy image to clipboard
+- **Ctrl+Q** - Quit application
 - **Esc** - Exit fullscreen or close window
-- **Double-click** - Toggle fullscreen
+- **Delete** - Move current image to trash
 
 ### Mouse Controls
 
-- **Click and drag** - Move window (in windowed mode) or pan image (in fullscreen)
+- **Click and drag** - Move window (windowed) / Pan image (fullscreen)
 - **Scroll wheel** - Zoom in/out
 - **Double-click** - Toggle fullscreen
 
 ## Build Requirements
 
-- Java 23
+- Java 25
 - Maven
-- JavaFX 24.0.1
-
-- GraalVM for Native Image
-- mt.exe for UTF-8 filename
+- JavaFX 25.0.2
 
 ## Building and Running
 
@@ -66,20 +63,21 @@ mvn clean compile
 
 # Run
 mvn javafx:run
-
-# Build JAR
-mvn clean package
 ```
-## Native Image Support
 
-The project includes GraalVM native image configuration for creating native executables.
+## Windows AOT Build
 
-### Windows Code Page Handling
+```bash
+mvn clean package
+build-with-aot.bat
+```
 
-When building native images on Windows, special handling is required for Unicode file names:
+## Win32 Launcher
 
-1. Before creating the GraalVM Native Image, run `utf_registry.bat` in an administrator command prompt.
-2. After creating the native image, run `shiftjis_registry.bat` (if your Windows is Japanese Code Page).
-3. Embed the manifest file into the .exe using the `mt.exe` command.
+Build the launcher on Developer Command Prompt for VS:
 
-`build_native_image.bat` is a batch file that automates this process.
+```bash
+build-launchar.bat
+```
+
+This generates `target/launcher/sss-image-viewer-launcher.exe`. Place it in the same directory as `sss-image-viewer.exe` and associate it with image file types.
