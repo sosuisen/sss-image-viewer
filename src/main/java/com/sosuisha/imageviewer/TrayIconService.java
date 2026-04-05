@@ -3,9 +3,15 @@ package com.sosuisha.imageviewer;
 import javafx.application.Platform;
 
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.UIManager;
 
 /**
  * Manages the system tray icon for the resident application.
@@ -23,13 +29,49 @@ class TrayIconService {
             return;
         }
 
-        PopupMenu popup = new PopupMenu();
-        MenuItem quitItem = new MenuItem("Quit");
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            // ignore
+        }
+
+        UIManager.put("MenuItem.checkIcon", new javax.swing.Icon() {
+            @Override public void paintIcon(Component c, Graphics g, int x, int y) {}
+            @Override public int getIconWidth() { return 0; }
+            @Override public int getIconHeight() { return 0; }
+        });
+        var popup = new JPopupMenu();
+        popup.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        var quitItem = new JMenuItem("Quit", createCloseIcon());
         quitItem.addActionListener(_ -> Platform.runLater(Platform::exit));
         popup.add(quitItem);
 
-        trayIcon = new TrayIcon(createIcon(), "SSS Image Viewer", popup);
+        trayIcon = new TrayIcon(createIcon(), "SSS Image Viewer");
         trayIcon.setImageAutoSize(true);
+        trayIcon.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showPopup(popup);
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showPopup(popup);
+                }
+            }
+
+            private void showPopup(JPopupMenu menu) {
+                var mousePos = MouseInfo.getPointerInfo().getLocation();
+                int x = mousePos.x;
+                int y = mousePos.y - menu.getPreferredSize().height;
+                menu.setLocation(x, y);
+                menu.setInvoker(menu);
+                menu.setVisible(true);
+            }
+        });
 
         try {
             SystemTray.getSystemTray().add(trayIcon);
@@ -46,6 +88,21 @@ class TrayIconService {
             SystemTray.getSystemTray().remove(trayIcon);
             trayIcon = null;
         }
+    }
+
+    private static javax.swing.Icon createCloseIcon() {
+        try {
+            var stream = TrayIconService.class.getResourceAsStream("/quit_icon.png");
+            if (stream != null) {
+                var original = ImageIO.read(stream);
+                int targetSize = 16;
+                var scaled = original.getScaledInstance(targetSize, targetSize, Image.SCALE_SMOOTH);
+                return new javax.swing.ImageIcon(scaled);
+            }
+        } catch (IOException e) {
+            System.err.println("Failed to load quit_icon.png: " + e.getMessage());
+        }
+        return null;
     }
 
     private static Image createIcon() {
