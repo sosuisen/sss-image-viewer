@@ -38,7 +38,9 @@ class SingleInstanceService {
 
         int port;
         try {
-            port = Integer.parseInt(Files.readString(PORT_FILE).trim());
+            // Port file format is "port\npid" — parse only the first line.
+            String firstLine = Files.readString(PORT_FILE).lines().findFirst().orElse("");
+            port = Integer.parseInt(firstLine.trim());
         } catch (IOException | NumberFormatException e) {
             deletePortFile();
             return false;
