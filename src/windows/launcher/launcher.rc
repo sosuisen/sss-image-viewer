@@ -1,0 +1,10 @@
+#include <windows.h>
+
+/*
+ * Application icon for sss-image-viewer-launcher.exe.
+ *
+ * Explorer uses the icon resource with the lowest ID as the file's icon,
+ * so we register it as ID 1. The path is resolved relative to this .rc file
+ * (rc.exe), or via the include dir passed to windres (see build-launcher.bat).
+ */
+1 ICON "..\\assets\\icon.ico"
