@@ -1,7 +1,8 @@
 package com.sosuisha.imageviewer.view;
 
-import com.sosuisha.imageviewer.HistoryEntry;
+import com.sosuisha.imageviewer.ImageService;
 import com.sosuisha.imageviewer.MarkPersistenceService;
+import com.sosuisha.imageviewer.SessionEntry;
 import com.sosuisha.imageviewer.SharedMarkManager;
 
 import io.github.sosuisen.jfxbuilder.controls.ButtonBuilder;
@@ -15,8 +16,6 @@ import io.github.sosuisen.jfxbuilder.graphics.VBoxBuilder;
 import java.io.File;
 
 import javafx.application.Platform;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -27,77 +26,50 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 
 /**
- * Displays the history of marked image sessions in a TableView.
+ * Displays the history of saved grid sessions in a TableView.
+ * Each row is one session with its thumbnails in ascending mark order.
  */
 public class HistoryWindow {
 
     /**
-     * Opens the history window and loads entries from the database.
+     * Opens the history window and loads sessions from the database.
      */
     public HistoryWindow() {
-        var entries = MarkPersistenceService.getInstance().loadHistory();
-        var items = FXCollections.observableArrayList(entries);
+        var items = FXCollections.observableArrayList(
+                MarkPersistenceService.getInstance().loadSessionSummaries());
 
-        var thumbnailCol = TableColumnBuilder.<HistoryEntry, Void>create("")
-                .cellFactory(_ -> new ThumbnailCell())
-                .prefWidth(60)
+        var thumbnailsCol = TableColumnBuilder.<SessionEntry, Void>create("Images")
+                .cellFactory(_ -> new SessionThumbnailsCell())
+                .prefWidth(500)
                 .sortable(false)
                 .build();
 
-        var sessionCol = TableColumnBuilder.<HistoryEntry, String>create("Session ID")
-                .cellValueFactory(cd -> new SimpleStringProperty(cd.getValue().sessionId()))
-                .prefWidth(140)
-                .build();
-
-        var fileCol = TableColumnBuilder.<HistoryEntry, String>create("File Name")
-                .cellValueFactory(cd -> new SimpleStringProperty(cd.getValue().fileName()))
-                .prefWidth(300)
-                .build();
-
-        var orderCol = TableColumnBuilder.<HistoryEntry, Number>create("Order")
-                .cellValueFactory(cd -> new SimpleIntegerProperty(cd.getValue().markOrder()))
-                .prefWidth(60)
-                .build();
-
-        var imageScaleCol = TableColumnBuilder.<HistoryEntry, Number>create("Image Scale")
-                .cellValueFactory(cd -> new SimpleDoubleProperty(cd.getValue().imageScale()))
-                .prefWidth(100)
-                .build();
-
-        var frameScaleCol = TableColumnBuilder.<HistoryEntry, Number>create("Frame Scale")
-                .cellValueFactory(cd -> new SimpleDoubleProperty(cd.getValue().frameScale()))
-                .prefWidth(100)
-                .build();
-
-        var dateCol = TableColumnBuilder.<HistoryEntry, String>create("Date")
+        var dateCol = TableColumnBuilder.<SessionEntry, String>create("Date")
                 .cellValueFactory(cd -> new SimpleStringProperty(cd.getValue().savedAt()))
-                .prefWidth(180)
+                .prefWidth(160)
                 .build();
 
-        var deleteCol = TableColumnBuilder.<HistoryEntry, Void>create("")
+        var deleteCol = TableColumnBuilder.<SessionEntry, Void>create("")
                 .cellFactory(_ -> new DeleteButtonCell())
-                .prefWidth(120)
+                .prefWidth(100)
                 .sortable(false)
                 .build();
 
-        var tableView = TableViewBuilder.<HistoryEntry>create(items)
-                .addColumns(thumbnailCol, sessionCol, fileCol, orderCol, imageScaleCol, frameScaleCol, dateCol, deleteCol)
+        var tableView = TableViewBuilder.<SessionEntry>create(items)
+                .addColumns(thumbnailsCol, dateCol, deleteCol)
                 .apply(tv -> {
                     tv.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
                     tv.setFixedCellSize(THUMBNAIL_SIZE + 8);
                 })
                 .rowFactory(_ -> {
-                    var row = new TableRow<HistoryEntry>();
+                    var row = new TableRow<SessionEntry>();
                     row.setOnMouseClicked(e -> {
                         if (e.getClickCount() == 2 && !row.isEmpty()) {
-                            var file = new File(row.getItem().filePath());
-                            if (file.exists()) {
-                                new ImageViewerWindow(file, false);
-                            }
+                            openSession(row.getItem());
                         }
                     });
                     return row;
@@ -105,7 +77,12 @@ public class HistoryWindow {
                 .build();
 
         var openGridButton = ButtonBuilder.create("Open session")
-                .onAction(_ -> openGridFromSelection(tableView))
+                .onAction(_ -> {
+                    var selected = tableView.getSelectionModel().getSelectedItem();
+                    if (selected != null) {
+                        openSession(selected);
+                    }
+                })
                 .build();
 
         var buttonBar = HBoxBuilder.withChildren(openGridButton)
@@ -120,7 +97,7 @@ public class HistoryWindow {
                 .build();
 
         Runnable reloadListener = () -> Platform.runLater(() -> {
-            tableView.getItems().setAll(MarkPersistenceService.getInstance().loadHistory());
+            tableView.getItems().setAll(MarkPersistenceService.getInstance().loadSessionSummaries());
         });
         var service = MarkPersistenceService.getInstance();
         service.addChangeListener(reloadListener);
@@ -136,12 +113,8 @@ public class HistoryWindow {
                 .show();
     }
 
-    private void openGridFromSelection(TableView<HistoryEntry> tableView) {
-        var selected = tableView.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            return;
-        }
-        var sessionEntries = MarkPersistenceService.getInstance().loadSession(selected.sessionId());
+    private void openSession(SessionEntry session) {
+        var sessionEntries = MarkPersistenceService.getInstance().loadSession(session.sessionId());
         if (sessionEntries.isEmpty()) {
             return;
         }
@@ -153,18 +126,16 @@ public class HistoryWindow {
             }
         }
 
-        new MarkedImagesGridWindow(sessionEntries, selected.sessionId());
+        new MarkedImagesGridWindow(sessionEntries, session.sessionId());
     }
 
     private static final double THUMBNAIL_SIZE = 40;
 
-    private static class ThumbnailCell extends TableCell<HistoryEntry, Void> {
-        private final ImageView imageView = new ImageView();
+    private static class SessionThumbnailsCell extends TableCell<SessionEntry, Void> {
+        private final HBox box = new HBox(2);
 
-        ThumbnailCell() {
-            imageView.setFitWidth(THUMBNAIL_SIZE);
-            imageView.setFitHeight(THUMBNAIL_SIZE);
-            imageView.setPreserveRatio(true);
+        SessionThumbnailsCell() {
+            box.setAlignment(Pos.CENTER_LEFT);
         }
 
         @Override
@@ -173,31 +144,37 @@ public class HistoryWindow {
             if (empty || getIndex() < 0 || getIndex() >= getTableView().getItems().size()) {
                 setGraphic(null);
             } else {
-                var entry = getTableView().getItems().get(getIndex());
-                var file = new File(entry.filePath());
-                if (file.exists()) {
-                    var image = new Image(file.toURI().toString(), THUMBNAIL_SIZE, THUMBNAIL_SIZE, true, true, true);
-                    imageView.setImage(image);
-                } else {
-                    imageView.setImage(null);
+                var session = getTableView().getItems().get(getIndex());
+                box.getChildren().clear();
+                for (var filePath : session.filePaths()) {
+                    var file = new File(filePath);
+                    if (!file.exists()) {
+                        continue;
+                    }
+                    var image = ImageService.getInstance().getThumbnailFromFile(file, THUMBNAIL_SIZE);
+                    var imageView = new ImageView(image);
+                    imageView.setFitWidth(THUMBNAIL_SIZE);
+                    imageView.setFitHeight(THUMBNAIL_SIZE);
+                    imageView.setPreserveRatio(true);
+                    box.getChildren().add(imageView);
                 }
-                setGraphic(imageView);
-                setAlignment(Pos.CENTER);
+                setGraphic(box);
+                setAlignment(Pos.CENTER_LEFT);
             }
         }
     }
 
-    private static class DeleteButtonCell extends TableCell<HistoryEntry, Void> {
+    private static class DeleteButtonCell extends TableCell<SessionEntry, Void> {
         private final Button button = new Button("Delete");
 
         DeleteButtonCell() {
             button.setOnAction(_ -> {
-                var entry = getTableView().getItems().get(getIndex());
+                var session = getTableView().getItems().get(getIndex());
                 var alert = new Alert(Alert.AlertType.CONFIRMATION,
-                        "Delete this session?\n" + entry.sessionId());
+                        "Delete this session?\n" + session.savedAt());
                 var result = alert.showAndWait();
                 if (result.isPresent() && result.get() == ButtonType.OK) {
-                    MarkPersistenceService.getInstance().deleteSession(entry.sessionId());
+                    MarkPersistenceService.getInstance().deleteSessionAndThumbnails(session.sessionId());
                 }
             });
         }

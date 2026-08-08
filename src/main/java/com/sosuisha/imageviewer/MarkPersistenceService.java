@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -117,34 +118,33 @@ public class MarkPersistenceService {
     }
 
     /**
-     * Loads all history entries from the database.
+     * Loads one summary entry per session, newest first.
      *
-     * @return list of history entries ordered by saved_at descending
+     * @return list of session entries with image paths in ascending mark order
      */
-    public List<HistoryEntry> loadHistory() {
-        var entries = new ArrayList<HistoryEntry>();
+    public List<SessionEntry> loadSessionSummaries() {
+        var sessions = new LinkedHashMap<String, SessionEntry>();
         var sql = """
-                SELECT session_id, path, mark_order, image_scale, frame_scale, saved_at
+                SELECT session_id, path, saved_at
                 FROM marked_images
-                ORDER BY saved_at DESC, mark_order ASC
+                ORDER BY saved_at DESC, session_id ASC, mark_order ASC
                 """;
         try (var conn = getConnection();
              var stmt = conn.createStatement();
              var rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 var sessionId = rs.getString("session_id");
-                var filePath = rs.getString("path");
-                var fileName = Path.of(filePath).getFileName().toString();
-                int markOrder = rs.getInt("mark_order");
-                double imageScale = rs.getDouble("image_scale");
-                double frameScale = rs.getDouble("frame_scale");
-                var savedAt = rs.getString("saved_at");
-                entries.add(new HistoryEntry(sessionId, filePath, fileName, markOrder, imageScale, frameScale, savedAt));
+                var session = sessions.get(sessionId);
+                if (session == null) {
+                    session = new SessionEntry(sessionId, rs.getString("saved_at"), new ArrayList<>());
+                    sessions.put(sessionId, session);
+                }
+                session.filePaths().add(rs.getString("path"));
             }
         } catch (SQLException e) {
-            System.err.println("Failed to load history: " + e.getMessage());
+            System.err.println("Failed to load session summaries: " + e.getMessage());
         }
-        return entries;
+        return new ArrayList<>(sessions.values());
     }
 
     /**
@@ -184,6 +184,59 @@ public class MarkPersistenceService {
             System.err.println("Failed to load session: " + e.getMessage());
         }
         return result;
+    }
+
+    /**
+     * Deletes all entries for the specified session, and removes cached
+     * thumbnails of images that are no longer referenced by any remaining
+     * session. Use this for user-initiated deletion; use
+     * {@link #deleteSession(String)} when the session is deleted only to be
+     * saved again, so thumbnails are kept.
+     *
+     * @param sessionId the session UUID to delete
+     * @throws NullPointerException if sessionId is null
+     */
+    public void deleteSessionAndThumbnails(String sessionId) {
+        java.util.Objects.requireNonNull(sessionId, "sessionId must not be null");
+        var paths = loadSessionPaths(sessionId);
+        deleteSession(sessionId);
+        for (var path : paths) {
+            if (!isPathReferenced(path)) {
+                ImageService.getInstance().deleteThumbnailsForFile(new File(path));
+            }
+        }
+    }
+
+    private List<String> loadSessionPaths(String sessionId) {
+        var paths = new ArrayList<String>();
+        try (var conn = getConnection();
+             var pstmt = conn.prepareStatement(
+                     "SELECT DISTINCT path FROM marked_images WHERE session_id = ?")) {
+            pstmt.setString(1, sessionId);
+            try (var rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    paths.add(rs.getString("path"));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to load session paths: " + e.getMessage());
+        }
+        return paths;
+    }
+
+    private boolean isPathReferenced(String path) {
+        try (var conn = getConnection();
+             var pstmt = conn.prepareStatement(
+                     "SELECT 1 FROM marked_images WHERE path = ? LIMIT 1")) {
+            pstmt.setString(1, path);
+            try (var rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            System.err.println("Failed to check path reference: " + e.getMessage());
+            // Keep thumbnails when the check fails
+            return true;
+        }
     }
 
     /**
