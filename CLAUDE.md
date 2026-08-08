@@ -1,26 +1,3 @@
-# About Journal
-
-Always write and update your development journal in Japanese. The file should be:
-journal/yyyy-mm-dd_hhmm.md
-
-The content should be as follows:
-```
-# yyyy-mm-dd hh:mm
-
-# 作業内容
-* What you did
-* What problems occurred
-* How you solved them
-
-# 学んだこと
-  Write what you learned
-
-# 現在の課題
-  Write about any current problems you're facing
-
-# 感想
-  Other thoughts and current feelings
-```
 # SSS Image Viewer - Project Memo
 
 ## Project Overview
