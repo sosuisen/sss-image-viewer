@@ -67,6 +67,22 @@ public enum SharedMarkManager {
         return markOrigins.get(file);
     }
 
+    /**
+     * Updates the origin window of an already marked file.
+     * Does nothing if the file is not marked.
+     *
+     * @param file   the marked file (ignored if null)
+     * @param origin the new origin window (ignored if null)
+     */
+    public void updateMarkOrigin(File file, Window origin) {
+        if (file == null || origin == null) {
+            return;
+        }
+        if (markedImages.contains(file)) {
+            markOrigins.put(file, origin);
+        }
+    }
+
     public void unmark(File file) {
         markedImages.remove(file);
         markOrigins.remove(file);

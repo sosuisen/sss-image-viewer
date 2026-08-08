@@ -12,6 +12,7 @@ import com.sosuisha.imageviewer.ImageService;
 import com.sosuisha.imageviewer.MarkPersistenceService;
 import com.sosuisha.imageviewer.SharedMarkManager;
 
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
@@ -32,6 +33,7 @@ public class MarkedImagesGridWindow {
     private final List<Stage> stages = new ArrayList<>();
     private String sessionId;
     private boolean closed = false;
+    private boolean keepMarksOnClose = false;
 
     private static class TreemapEntry {
         final File file;
@@ -45,6 +47,7 @@ public class MarkedImagesGridWindow {
         Screen screen;
         StackPane cell;
         ImageView imageView;
+        Rect rect;
 
         TreemapEntry(File file, Image image, double weight, double imageScale, int markOrder) {
             this.file = file;
@@ -176,8 +179,10 @@ public class MarkedImagesGridWindow {
         Stage stage = new Stage(StageStyle.UNDECORATED);
         Scene scene = new Scene(container);
         scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.G) {
+            if (e.getCode() == KeyCode.ESCAPE) {
                 stage.close();
+            } else if (e.getCode() == KeyCode.G) {
+                explodeToWindows();
             }
         });
 
@@ -252,11 +257,50 @@ public class MarkedImagesGridWindow {
         closed = true;
 
         saveGridEntries();
-        if (sessionId != null) {
+        if (sessionId != null && !keepMarksOnClose) {
             SharedMarkManager.getInstance().clearMarks();
         }
 
         // Closing one grid window closes the grid windows on all displays
+        for (Stage stage : new ArrayList<>(stages)) {
+            if (stage.isShowing()) {
+                stage.close();
+            }
+        }
+    }
+
+    /**
+     * Replaces the grid windows with one viewer window per image, placed at
+     * the position where the image is shown in the grid. Marks are kept so
+     * that pressing G again in a viewer window returns to the grid view.
+     */
+    private void explodeToWindows() {
+        if (closed) {
+            return;
+        }
+        keepMarksOnClose = true;
+
+        for (TreemapEntry entry : entries) {
+            if (entry.rect == null || !entry.file.exists()) {
+                continue;
+            }
+            double imageW = entry.image.getWidth();
+            double imageH = entry.image.getHeight();
+            if (imageW <= 0 || imageH <= 0) {
+                continue;
+            }
+            Screen screen = entry.screen != null ? entry.screen : Screen.getPrimary();
+            var screenBounds = screen.getVisualBounds();
+            double fitScale = Math.min(entry.rect.w / imageW, entry.rect.h / imageH);
+            double displayW = imageW * fitScale;
+            double displayH = imageH * fitScale;
+            // Match the centered position of the image within its grid cell
+            double x = screenBounds.getMinX() + entry.rect.x + (entry.rect.w - displayW) / 2;
+            double y = screenBounds.getMinY() + entry.rect.y + (entry.rect.h - displayH) / 2;
+            var viewer = new ImageViewerWindow(entry.file, true, new Point2D(x, y), fitScale);
+            SharedMarkManager.getInstance().updateMarkOrigin(entry.file, viewer.getStage());
+        }
+
         for (Stage stage : new ArrayList<>(stages)) {
             if (stage.isShowing()) {
                 stage.close();
@@ -295,6 +339,7 @@ public class MarkedImagesGridWindow {
         for (int i = 0; i < screenEntries.size(); i++) {
             TreemapEntry entry = screenEntries.get(i);
             Rect rect = rects.get(i);
+            entry.rect = rect;
 
             entry.imageView.setFitWidth(rect.w);
             entry.imageView.setFitHeight(rect.h);

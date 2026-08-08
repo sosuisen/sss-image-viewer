@@ -148,6 +148,15 @@ public class ImageViewerWindow {
         setImage(file, false);
     }
 
+    /**
+     * Returns the stage of this viewer window.
+     *
+     * @return the stage
+     */
+    public Stage getStage() {
+        return stage;
+    }
+
     private Scene buildScene() {
         var imageStack = new StackPane();
         imageStack.getChildren().addAll(imageView, imageView2);
