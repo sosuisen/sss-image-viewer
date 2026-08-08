@@ -375,9 +375,10 @@ public class ImageViewerWindow {
             }
             case ENTER -> {
                 skipUnregisterOnClose = true;
-                new ImageViewerWindow(imageNavigator.getCurrentFile(), !withFrame,
+                var replacement = new ImageViewerWindow(imageNavigator.getCurrentFile(), !withFrame,
                         new Point2D(stage.getX(), stage.getY()),
                         currentScale.get());
+                SharedMarkManager.getInstance().transferMarkOrigins(stage, replacement.getStage());
                 cleanup();
                 stage.close();
             }
@@ -615,6 +616,8 @@ public class ImageViewerWindow {
         // Unregister from shared mark manager (unless toggling frame)
         if (!skipUnregisterOnClose) {
             SharedMarkManager.getInstance().unregisterWindow(windowId);
+            // Closing an image window removes the marks made in it
+            SharedMarkManager.getInstance().unmarkAllFromOrigin(stage);
         }
 
         // Remove property listeners

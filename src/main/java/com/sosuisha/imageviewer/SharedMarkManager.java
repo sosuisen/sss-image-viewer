@@ -1,6 +1,7 @@
 package com.sosuisha.imageviewer;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -80,6 +81,45 @@ public enum SharedMarkManager {
         }
         if (markedImages.contains(file)) {
             markOrigins.put(file, origin);
+        }
+    }
+
+    /**
+     * Removes the marks of all files that were marked in the given window.
+     *
+     * @param origin the window whose marks should be removed (ignored if null)
+     */
+    public void unmarkAllFromOrigin(Window origin) {
+        if (origin == null) {
+            return;
+        }
+        var files = new ArrayList<File>();
+        for (var entry : markOrigins.entrySet()) {
+            if (entry.getValue() == origin) {
+                files.add(entry.getKey());
+            }
+        }
+        for (File file : files) {
+            unmark(file);
+        }
+    }
+
+    /**
+     * Moves all mark origins from one window to another. Use this when a
+     * window is recreated (e.g., toggling the window frame) so its marks
+     * stay owned by the replacement window.
+     *
+     * @param from the window being replaced (ignored if null)
+     * @param to   the replacement window (ignored if null)
+     */
+    public void transferMarkOrigins(Window from, Window to) {
+        if (from == null || to == null) {
+            return;
+        }
+        for (var entry : markOrigins.entrySet()) {
+            if (entry.getValue() == from) {
+                entry.setValue(to);
+            }
         }
     }
 
