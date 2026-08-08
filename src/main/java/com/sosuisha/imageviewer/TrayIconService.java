@@ -3,6 +3,7 @@ package com.sosuisha.imageviewer;
 import javafx.application.Platform;
 
 import com.sosuisha.imageviewer.view.HistoryWindow;
+import com.sosuisha.imageviewer.view.SettingsDialog;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -47,6 +48,9 @@ class TrayIconService {
         var historyItem = new JMenuItem("History", loadIcon("/history_icon.png"));
         historyItem.addActionListener(_ -> Platform.runLater(HistoryWindow::new));
         popup.add(historyItem);
+        var settingsItem = new JMenuItem("Settings", loadIcon("/settings_icon.png"));
+        settingsItem.addActionListener(_ -> Platform.runLater(SettingsDialog::show));
+        popup.add(settingsItem);
         var quitItem = new JMenuItem("Quit", loadIcon("/quit_icon.png"));
         quitItem.addActionListener(_ -> Platform.runLater(Platform::exit));
         popup.add(quitItem);

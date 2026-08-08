@@ -69,7 +69,10 @@ public class App extends Application {
 
     private void openFile(Stage stage, String filePath, boolean fileNameWillBeChanged) {
         if (filePath == null) {
-            new DragAndDropWindow(stage);
+            // The app stays in the system tray when the setting is off
+            if (SettingsService.getInstance().isOpenDragAndDropWindowAtStartup()) {
+                new DragAndDropWindow(stage);
+            }
             return;
         }
 
