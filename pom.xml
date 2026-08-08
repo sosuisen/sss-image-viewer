@@ -177,23 +177,30 @@
       </properties>
       <build>
         <plugins>
+          <!-- jpackage generates read-only exe on Windows, which causes maven-clean-plugin to fail.
+               Remove the read-only attribute after jpackage execution so that mvn clean works. -->
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
-            <version>3.1.0</version>
+            <version>3.5.0</version>
             <executions>
               <execution>
-                <id>chmod-exe</id>
+                <id>remove-readonly</id>
                 <phase>package</phase>
                 <goals>
                   <goal>exec</goal>
                 </goals>
                 <configuration>
-                  <executable>chmod</executable>
+                  <executable>attrib</executable>
                   <arguments>
-                    <argument>777</argument>
-                    <argument>${project.build.directory}/jpackage/${project.artifactId}/${project.artifactId}.exe</argument>
+                    <argument>-R</argument>
+                    <argument>/S</argument>
+                    <argument>${project.build.directory}\jpackage\*.*</argument>
                   </arguments>
+                  <successCodes>
+                    <successCode>0</successCode>
+                    <successCode>1</successCode>
+                  </successCodes>
                 </configuration>
               </execution>
             </executions>
