@@ -146,8 +146,14 @@ public class ImageNavigator {
         onImageChange.accept(nextFile, animate);
     }
 
-    public void toggleMarkOnCurrentImage() {
-        SharedMarkManager.getInstance().toggleMark(currentFile.get());
+    /**
+     * Toggles the mark state of the current image, recording the window where
+     * the mark was made.
+     *
+     * @param originWindow the window where the mark operation happened (can be null)
+     */
+    public void toggleMarkOnCurrentImage(javafx.stage.Window originWindow) {
+        SharedMarkManager.getInstance().toggleMark(currentFile.get(), originWindow);
     }
 
     public BooleanProperty isCurrentImageMarked() {

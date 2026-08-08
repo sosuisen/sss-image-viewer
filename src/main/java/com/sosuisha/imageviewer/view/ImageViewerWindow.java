@@ -381,7 +381,7 @@ public class ImageViewerWindow {
                 helpMode.set(!helpMode.get());
             }
             case SPACE -> {
-                imageNavigator.toggleMarkOnCurrentImage();
+                imageNavigator.toggleMarkOnCurrentImage(stage);
             }
             case S -> {
                 boolean wasSlideshow = imageNavigator.slideshowModeProperty().get();

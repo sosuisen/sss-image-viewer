@@ -8,12 +8,14 @@ import java.util.Set;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.stage.Window;
 
 public enum SharedMarkManager {
     INSTANCE;
 
     private final ObservableList<File> markedImages = FXCollections.observableArrayList();
     private final Map<String, Set<File>> windowFileRegistry = new HashMap<>();
+    private final Map<File, Window> markOrigins = new HashMap<>();
 
     public static SharedMarkManager getInstance() {
         return INSTANCE;
@@ -23,19 +25,59 @@ public enum SharedMarkManager {
         return markedImages;
     }
 
+    /**
+     * Toggles the mark state of the given file without recording an origin window.
+     *
+     * @param file the file to toggle (ignored if null)
+     */
     public void toggleMark(File file) {
+        toggleMark(file, null);
+    }
+
+    /**
+     * Toggles the mark state of the given file and records the window where the
+     * mark was made. The origin window is used to decide on which display the
+     * marked image should appear in the grid view.
+     *
+     * @param file   the file to toggle (ignored if null)
+     * @param origin the window where the mark was made (can be null)
+     */
+    public void toggleMark(File file, Window origin) {
         if (file == null) {
             return;
         }
         if (markedImages.contains(file)) {
             markedImages.remove(file);
+            markOrigins.remove(file);
         } else {
             markedImages.add(file);
+            if (origin != null) {
+                markOrigins.put(file, origin);
+            }
         }
+    }
+
+    /**
+     * Returns the window where the given file was marked.
+     *
+     * @param file the marked file
+     * @return the origin window, or null if unknown
+     */
+    public Window getMarkOrigin(File file) {
+        return markOrigins.get(file);
     }
 
     public void unmark(File file) {
         markedImages.remove(file);
+        markOrigins.remove(file);
+    }
+
+    /**
+     * Removes all marks and their origin windows.
+     */
+    public void clearMarks() {
+        markedImages.clear();
+        markOrigins.clear();
     }
 
     public void registerWindow(String windowId, Set<File> files) {
@@ -57,7 +99,7 @@ public enum SharedMarkManager {
         // Remove marks for files exclusive to the closed window
         for (File file : windowFiles) {
             if (!filesInOtherWindows.contains(file)) {
-                markedImages.remove(file);
+                unmark(file);
             }
         }
     }

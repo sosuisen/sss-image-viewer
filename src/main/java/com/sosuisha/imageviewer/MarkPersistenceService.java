@@ -56,12 +56,20 @@ public class MarkPersistenceService {
                     mark_order INTEGER NOT NULL DEFAULT 0,
                     image_scale REAL NOT NULL DEFAULT 1.0,
                     frame_scale REAL NOT NULL DEFAULT 1.0,
+                    screen_x REAL NOT NULL DEFAULT 0,
+                    screen_y REAL NOT NULL DEFAULT 0,
+                    offset_x REAL NOT NULL DEFAULT 0,
+                    offset_y REAL NOT NULL DEFAULT 0,
                     saved_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
                 )
                 """);
             addColumnIfMissing(conn, "mark_order", "INTEGER NOT NULL DEFAULT 0");
             addColumnIfMissing(conn, "image_scale", "REAL NOT NULL DEFAULT 1.0");
             addColumnIfMissing(conn, "frame_scale", "REAL NOT NULL DEFAULT 1.0");
+            addColumnIfMissing(conn, "screen_x", "REAL NOT NULL DEFAULT 0");
+            addColumnIfMissing(conn, "screen_y", "REAL NOT NULL DEFAULT 0");
+            addColumnIfMissing(conn, "offset_x", "REAL NOT NULL DEFAULT 0");
+            addColumnIfMissing(conn, "offset_y", "REAL NOT NULL DEFAULT 0");
         } catch (SQLException e) {
             System.err.println("Failed to initialize DB schema: " + e.getMessage());
         }
@@ -150,7 +158,7 @@ public class MarkPersistenceService {
         java.util.Objects.requireNonNull(sessionId, "sessionId must not be null");
         var result = new ArrayList<GridImageEntry>();
         var sql = """
-                SELECT path, mark_order, image_scale, frame_scale
+                SELECT path, mark_order, image_scale, frame_scale, screen_x, screen_y, offset_x, offset_y
                 FROM marked_images
                 WHERE session_id = ?
                 ORDER BY mark_order ASC
@@ -164,7 +172,12 @@ public class MarkPersistenceService {
                     int markOrder = rs.getInt("mark_order");
                     double imageScale = rs.getDouble("image_scale");
                     double frameScale = rs.getDouble("frame_scale");
-                    result.add(new GridImageEntry(file, markOrder, imageScale, frameScale));
+                    double screenX = rs.getDouble("screen_x");
+                    double screenY = rs.getDouble("screen_y");
+                    double offsetX = rs.getDouble("offset_x");
+                    double offsetY = rs.getDouble("offset_y");
+                    result.add(new GridImageEntry(file, markOrder, imageScale, frameScale, screenX, screenY,
+                            offsetX, offsetY));
                 }
             }
         } catch (SQLException e) {
@@ -206,13 +219,17 @@ public class MarkPersistenceService {
         try (var conn = getConnection()) {
             conn.setAutoCommit(false);
             try (var pstmt = conn.prepareStatement(
-                    "INSERT INTO marked_images (session_id, path, mark_order, image_scale, frame_scale) VALUES (?, ?, ?, ?, ?)")) {
+                    "INSERT INTO marked_images (session_id, path, mark_order, image_scale, frame_scale, screen_x, screen_y, offset_x, offset_y) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 for (var entry : gridEntries) {
                     pstmt.setString(1, id);
                     pstmt.setString(2, entry.file().getCanonicalPath());
                     pstmt.setInt(3, entry.markOrder());
                     pstmt.setDouble(4, entry.imageScale());
                     pstmt.setDouble(5, entry.frameScale());
+                    pstmt.setDouble(6, entry.screenX());
+                    pstmt.setDouble(7, entry.screenY());
+                    pstmt.setDouble(8, entry.offsetX());
+                    pstmt.setDouble(9, entry.offsetY());
                     pstmt.addBatch();
                 }
                 pstmt.executeBatch();
