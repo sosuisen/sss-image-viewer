@@ -37,6 +37,28 @@ public class ImageViewerWindow {
     private static final int STATUS_HEIGHT = 20;
     private static final double MAX_DIMENSION = 800.0; // デフォルトの最大サイズ
 
+    // All open viewer windows, used to find a window already showing a file
+    private static final java.util.List<ImageViewerWindow> openWindows = new java.util.ArrayList<>();
+
+    /**
+     * Returns the stage of an open viewer window that is currently showing
+     * the given file.
+     *
+     * @param file the image file to look for
+     * @return the stage showing the file, or null if none
+     */
+    public static Stage findStageShowingFile(File file) {
+        if (file == null) {
+            return null;
+        }
+        for (var window : openWindows) {
+            if (window.stage.isShowing() && file.equals(window.imageNavigator.getCurrentFile())) {
+                return window.stage;
+            }
+        }
+        return null;
+    }
+
     private double xOffset = 0;
     private double yOffset = 0;
 
@@ -140,6 +162,8 @@ public class ImageViewerWindow {
         stage.show();
         stage.toFront();
         stage.requestFocus();
+
+        openWindows.add(this);
 
         // Set up property listeners after stage is shown (frame metrics available)
         setupPropertyListeners();
@@ -610,6 +634,8 @@ public class ImageViewerWindow {
      * Clean up all listeners and bindings to prevent memory leaks
      */
     private void cleanup() {
+        openWindows.remove(this);
+
         // Stop slideshow if running
         imageNavigator.stopSlideshow();
 

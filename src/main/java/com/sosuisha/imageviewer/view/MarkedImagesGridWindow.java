@@ -284,6 +284,12 @@ public class MarkedImagesGridWindow {
             if (entry.rect == null || !entry.file.exists()) {
                 continue;
             }
+            // Reuse a viewer window that is already showing this image
+            Stage existingStage = ImageViewerWindow.findStageShowingFile(entry.file);
+            if (existingStage != null) {
+                SharedMarkManager.getInstance().updateMarkOrigin(entry.file, existingStage);
+                continue;
+            }
             double imageW = entry.image.getWidth();
             double imageH = entry.image.getHeight();
             if (imageW <= 0 || imageH <= 0) {
